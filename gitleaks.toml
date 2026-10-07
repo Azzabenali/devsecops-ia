@@ -4,11 +4,14 @@ title = "Gitleaks - DevSecOps IA"
 useDefault = true
 
 [allowlist]
-description = "Faux secrets présents uniquement dans les datasets ML de test"
+description = "Faux secrets présents uniquement dans les données et scripts de génération ML"
 
 paths = [
     '''(^|/)ml/data/raw/python_security_dataset\.csv$''',
     '''(^|/)ml/data/raw/python_security_dataset_v2\.csv$''',
     '''(^|/)ml/data/raw/python_security_dataset_v3\.csv$''',
-    '''(^|/)ml/data/processed/ml_dataset_combined\.csv$'''
+    '''(^|/)ml/data/processed/ml_dataset_combined\.csv$''',
+    '''(^|/)ml/scripts/generate_python_dataset\.py$''',
+    '''(^|/)ml/scripts/generate_python_dataset_v2\.py$''',
+    '''(^|/)ml/scripts/generate_python_dataset_v3\.py$'''
 ]
