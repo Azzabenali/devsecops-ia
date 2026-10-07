@@ -1,0 +1,129 @@
+id,group_id,vuln_type,cwe,title,description,code_line,real_vulnerability,language,file_type
+1,sqli_001,sqli,CWE-89,SQL Injection - string concatenation,Construction dynamique d'une requête SQL avec une entrée utilisateur.,"query = ""SELECT * FROM users WHERE id = "" + user_id",1,python,.py
+2,sqli_001,sqli,CWE-89,SQL Injection - string concatenation - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"query = ""SELECT * FROM users WHERE id = ?""",0,python,.py
+3,sqli_002,sqli,CWE-89,SQL Injection - f-string,Une f-string incorpore directement une donnée contrôlée par l'utilisateur.,"sql = f""SELECT * FROM products WHERE name = '{name}'""",1,python,.py
+4,sqli_002,sqli,CWE-89,SQL Injection - f-string - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"sql = ""SELECT * FROM products WHERE name = ?""",0,python,.py
+5,sqli_003,sqli,CWE-89,SQL Injection - DELETE,Une commande DELETE est construite avec une entrée non paramétrée.,"cursor.execute(""DELETE FROM users WHERE id="" + uid)",1,python,.py
+6,sqli_003,sqli,CWE-89,SQL Injection - DELETE - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"cursor.execute(""DELETE FROM users WHERE id=?"", (uid,))",0,python,.py
+7,sqli_004,sqli,CWE-89,SQL Injection - account query,Une requête sur un compte utilise directement une valeur externe.,"statement = ""SELECT balance FROM accounts WHERE id="" + account_id",1,python,.py
+8,sqli_004,sqli,CWE-89,SQL Injection - account query - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"statement = ""SELECT balance FROM accounts WHERE id=?""",0,python,.py
+9,sqli_005,sqli,CWE-89,SQL Injection - UPDATE,Des paramètres utilisateur sont concaténés dans une requête UPDATE.,"query = ""UPDATE users SET role='"" + role + ""' WHERE id="" + uid",1,python,.py
+10,sqli_005,sqli,CWE-89,SQL Injection - UPDATE - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"query = ""UPDATE users SET role=? WHERE id=?""",0,python,.py
+11,sqli_006,sqli,CWE-89,SQL Injection - status filter,Une valeur de filtre est directement ajoutée à la requête SQL.,"sql = ""SELECT * FROM orders WHERE status='"" + status + ""'""",1,python,.py
+12,sqli_006,sqli,CWE-89,SQL Injection - status filter - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"sql = ""SELECT * FROM orders WHERE status=?""",0,python,.py
+13,sqli_007,sqli,CWE-89,SQL Injection - city filter,Une donnée externe est utilisée dans une clause WHERE sans paramètre.,"query = ""SELECT email FROM clients WHERE city='"" + city + ""'""",1,python,.py
+14,sqli_007,sqli,CWE-89,SQL Injection - city filter - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"query = ""SELECT email FROM clients WHERE city=?""",0,python,.py
+15,sqli_008,sqli,CWE-89,SQL Injection - log query,Le nom utilisateur est directement concaténé à une requête SQL.,"sql = ""SELECT * FROM logs WHERE user='"" + username + ""'""",1,python,.py
+16,sqli_008,sqli,CWE-89,SQL Injection - log query - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"sql = ""SELECT * FROM logs WHERE user=?""",0,python,.py
+17,xss_001,xss,CWE-79,XSS - HTML concatenation,Une donnée utilisateur est injectée directement dans une réponse HTML.,"return ""<h1>Hello "" + username + ""</h1>""",1,python,.py
+18,xss_001,xss,CWE-79,XSS - HTML concatenation - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"return ""<h1>Hello "" + html.escape(username) + ""</h1>""",0,python,.py
+19,xss_002,xss,CWE-79,XSS - comment,Un commentaire contrôlé par l'utilisateur est inséré dans du HTML.,"html = ""<div>"" + comment + ""</div>""",1,python,.py
+20,xss_002,xss,CWE-79,XSS - comment - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"html = ""<div>"" + html.escape(comment) + ""</div>""",0,python,.py
+21,xss_003,xss,CWE-79,XSS - f-string HTML,Une f-string incorpore directement une donnée dans du HTML.,"page = f""<p>{message}</p>""",1,python,.py
+22,xss_003,xss,CWE-79,XSS - f-string HTML - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"page = f""<p>{html.escape(message)}</p>""",0,python,.py
+23,xss_004,xss,CWE-79,XSS - search,Le terme de recherche est renvoyé sans échappement HTML.,"return ""<span>"" + search_term + ""</span>""",1,python,.py
+24,xss_004,xss,CWE-79,XSS - search - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"return ""<span>"" + html.escape(search_term) + ""</span>""",0,python,.py
+25,xss_005,xss,CWE-79,XSS - title,Le titre fourni par l'utilisateur est placé directement dans HTML.,"response = ""<h2>"" + title + ""</h2>""",1,python,.py
+26,xss_005,xss,CWE-79,XSS - title - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"response = ""<h2>"" + html.escape(title) + ""</h2>""",0,python,.py
+27,xss_006,xss,CWE-79,XSS - list item,Une valeur externe est insérée directement dans une liste HTML.,"body = ""<li>"" + item + ""</li>""",1,python,.py
+28,xss_006,xss,CWE-79,XSS - list item - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"body = ""<li>"" + html.escape(item) + ""</li>""",0,python,.py
+29,xss_007,xss,CWE-79,XSS - formatted value,Une donnée externe est affichée sans encodage HTML.,"result = ""<strong>"" + value + ""</strong>""",1,python,.py
+30,xss_007,xss,CWE-79,XSS - formatted value - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"result = ""<strong>"" + html.escape(value) + ""</strong>""",0,python,.py
+31,xss_008,xss,CWE-79,XSS - user profile,Le nom d'un utilisateur est intégré directement dans une page HTML.,"return ""<div class='user'>"" + name + ""</div>""",1,python,.py
+32,xss_008,xss,CWE-79,XSS - user profile - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"return ""<div class='user'>"" + html.escape(name) + ""</div>""",0,python,.py
+33,cmdi_001,cmdi,CWE-78,Command Injection - ping,Une commande système est construite à partir d'une entrée externe.,"subprocess.run(""ping "" + host, shell=True)",1,python,.py
+34,cmdi_001,cmdi,CWE-78,Command Injection - ping - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"subprocess.run([""ping"", host], shell=False)",0,python,.py
+35,cmdi_002,cmdi,CWE-78,Command Injection - nslookup,Une entrée utilisateur est ajoutée à une commande système.,"os.system(""nslookup "" + domain)",1,python,.py
+36,cmdi_002,cmdi,CWE-78,Command Injection - nslookup - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"subprocess.run([""nslookup"", domain], check=True)",0,python,.py
+37,cmdi_003,cmdi,CWE-78,Command Injection - grep,Une commande shell est construite avec une valeur contrôlée.,"os.popen(""grep "" + pattern + "" file.txt"")",1,python,.py
+38,cmdi_003,cmdi,CWE-78,Command Injection - grep - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"subprocess.run([""grep"", pattern, ""file.txt""], check=True)",0,python,.py
+39,cmdi_004,cmdi,CWE-78,Command Injection - curl,Une URL externe est directement utilisée dans une commande shell.,"subprocess.check_output(""curl "" + url, shell=True)",1,python,.py
+40,cmdi_004,cmdi,CWE-78,Command Injection - curl - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"subprocess.check_output([""curl"", url], shell=False)",0,python,.py
+41,cmdi_005,cmdi,CWE-78,Command Injection - mkdir,Un nom de répertoire externe est utilisé dans une commande système.,"os.system(""mkdir "" + directory)",1,python,.py
+42,cmdi_005,cmdi,CWE-78,Command Injection - mkdir - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"subprocess.run([""mkdir"", directory], check=True)",0,python,.py
+43,cmdi_006,cmdi,CWE-78,Command Injection - tar,Le nom d'une archive est intégré dans une commande shell.,"os.system(""tar -xf "" + archive)",1,python,.py
+44,cmdi_006,cmdi,CWE-78,Command Injection - tar - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"subprocess.run([""tar"", ""-xf"", archive], check=True)",0,python,.py
+45,cmdi_007,cmdi,CWE-78,Command Injection - chmod,Des paramètres externes contrôlent une commande système.,"subprocess.call(""chmod "" + mode + "" "" + filename, shell=True)",1,python,.py
+46,cmdi_007,cmdi,CWE-78,Command Injection - chmod - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"subprocess.call([""chmod"", mode, filename], shell=False)",0,python,.py
+47,cmdi_008,cmdi,CWE-78,Command Injection - python command,Le chemin du script est directement ajouté à une commande système.,"os.system(""python "" + script)",1,python,.py
+48,cmdi_008,cmdi,CWE-78,Command Injection - python command - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"subprocess.run([""python"", script], check=True)",0,python,.py
+49,pathtraver_001,pathtraver,CWE-22,Path Traversal - file read,Un chemin contrôlé par l'utilisateur est utilisé pour ouvrir un fichier.,"open(""/var/www/files/"" + filename)",1,python,.py
+50,pathtraver_001,pathtraver,CWE-22,Path Traversal - file read - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"open(os.path.join(""/var/www/files"", os.path.basename(filename)))",0,python,.py
+51,pathtraver_002,pathtraver,CWE-22,Path Traversal - uploads,Le nom de fichier externe est ajouté directement au chemin.,"path = ""/uploads/"" + requested_file",1,python,.py
+52,pathtraver_002,pathtraver,CWE-22,Path Traversal - uploads - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"path = safe_join(""/uploads"", requested_file)",0,python,.py
+53,pathtraver_003,pathtraver,CWE-22,Path Traversal - report,Le nom du rapport influence directement le chemin du fichier.,"with open(""/tmp/reports/"" + report_name) as f:",1,python,.py
+54,pathtraver_003,pathtraver,CWE-22,Path Traversal - report - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"with open(safe_join(""/tmp/reports"", report_name)) as f:",0,python,.py
+55,pathtraver_004,pathtraver,CWE-22,Path Traversal - data,Un fichier fourni par l'utilisateur peut modifier le chemin cible.,"filename = ""/data/"" + user_file",1,python,.py
+56,pathtraver_004,pathtraver,CWE-22,Path Traversal - data - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"filename = safe_join(""/data"", user_file)",0,python,.py
+57,pathtraver_005,pathtraver,CWE-22,Path Traversal - config,Un nom de configuration externe est utilisé sans validation.,"config = open(""/configs/"" + config_name)",1,python,.py
+58,pathtraver_005,pathtraver,CWE-22,Path Traversal - config - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"config = open(safe_join(""/configs"", config_name))",0,python,.py
+59,pathtraver_006,pathtraver,CWE-22,Path Traversal - backup,Le chemin d'une sauvegarde est contrôlé par une entrée externe.,"backup = ""/backup/"" + backup_name",1,python,.py
+60,pathtraver_006,pathtraver,CWE-22,Path Traversal - backup - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"backup = safe_join(""/backup"", backup_name)",0,python,.py
+61,pathtraver_007,pathtraver,CWE-22,Path Traversal - image,Le nom d'image externe peut influencer le chemin du fichier.,"image = open(""/images/"" + image_name, ""rb"")",1,python,.py
+62,pathtraver_007,pathtraver,CWE-22,Path Traversal - image - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"image = open(safe_join(""/images"", image_name), ""rb"")",0,python,.py
+63,pathtraver_008,pathtraver,CWE-22,Path Traversal - template,Le nom du template est utilisé directement pour construire un chemin.,"template = open(""/templates/"" + template_name).read()",1,python,.py
+64,pathtraver_008,pathtraver,CWE-22,Path Traversal - template - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"template = open(safe_join(""/templates"", template_name)).read()",0,python,.py
+65,secret_001,secret,CWE-798,Hardcoded API key,Une clé API est stockée directement dans le code source.,"API_KEY = ""sk_live_123456789""",1,python,.py
+66,secret_001,secret,CWE-798,Hardcoded API key - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"API_KEY = os.environ[""API_KEY""]",0,python,.py
+67,secret_002,secret,CWE-798,Hardcoded password,Un mot de passe est écrit en clair dans le code.,"PASSWORD = ""Admin@123""",1,python,.py
+68,secret_002,secret,CWE-798,Hardcoded password - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"PASSWORD = os.environ[""APP_PASSWORD""]",0,python,.py
+69,secret_003,secret,CWE-798,Hardcoded token,Un token d'accès est intégré directement dans le programme.,"TOKEN = ""ghp_example_secret_token""",1,python,.py
+70,secret_003,secret,CWE-798,Hardcoded token - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"TOKEN = os.getenv(""GITHUB_TOKEN"")",0,python,.py
+71,secret_004,secret,CWE-798,Hardcoded secret key,Une clé secrète d'application est codée en dur.,"SECRET_KEY = ""django-secret-123""",1,python,.py
+72,secret_004,secret,CWE-798,Hardcoded secret key - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"SECRET_KEY = os.environ[""SECRET_KEY""]",0,python,.py
+73,secret_005,secret,CWE-798,Hardcoded database password,Le mot de passe de base de données apparaît dans le code source.,"DB_PASSWORD = ""database_password""",1,python,.py
+74,secret_005,secret,CWE-798,Hardcoded database password - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"DB_PASSWORD = os.environ[""DB_PASSWORD""]",0,python,.py
+75,secret_006,secret,CWE-798,Hardcoded cloud secret,Un secret cloud est stocké directement dans le programme.,"AWS_SECRET = ""very-secret-value""",1,python,.py
+76,secret_006,secret,CWE-798,Hardcoded cloud secret - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"AWS_SECRET = os.getenv(""AWS_SECRET"")",0,python,.py
+77,secret_007,secret,CWE-798,Hardcoded private token,Un token privé est intégré dans le code.,"PRIVATE_TOKEN = ""token-value-123""",1,python,.py
+78,secret_007,secret,CWE-798,Hardcoded private token - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"PRIVATE_TOKEN = os.environ.get(""PRIVATE_TOKEN"")",0,python,.py
+79,secret_008,secret,CWE-798,Hardcoded SMTP password,Un mot de passe SMTP est présent en clair dans le code.,"SMTP_PASSWORD = ""mail-password""",1,python,.py
+80,secret_008,secret,CWE-798,Hardcoded SMTP password - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"SMTP_PASSWORD = os.environ[""SMTP_PASSWORD""]",0,python,.py
+81,crypto_001,crypto,CWE-327,Weak cryptography - DES,L'algorithme DES est considéré comme cryptographiquement faible.,"cipher = DES.new(key, DES.MODE_ECB)",1,python,.py
+82,crypto_001,crypto,CWE-327,Weak cryptography - DES - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"cipher = AES.new(key, AES.MODE_GCM)",0,python,.py
+83,crypto_002,crypto,CWE-327,Weak cryptography - ARC2,Un ancien algorithme cryptographique est utilisé.,cipher = ARC2.new(key),1,python,.py
+84,crypto_002,crypto,CWE-327,Weak cryptography - ARC2 - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"cipher = AES.new(key, AES.MODE_GCM)",0,python,.py
+85,crypto_003,crypto,CWE-327,Weak cryptography - Blowfish,Un algorithme ancien est utilisé pour protéger les données.,cipher = Blowfish.new(key),1,python,.py
+86,crypto_003,crypto,CWE-327,Weak cryptography - Blowfish - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"cipher = AES.new(key, AES.MODE_GCM)",0,python,.py
+87,crypto_004,crypto,CWE-327,Weak cryptography - 3DES,Triple DES est utilisé au lieu d'un algorithme moderne.,cipher = DES3.new(key),1,python,.py
+88,crypto_004,crypto,CWE-327,Weak cryptography - 3DES - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"cipher = AES.new(key, AES.MODE_GCM)",0,python,.py
+89,crypto_005,crypto,CWE-327,Weak cryptography - legacy,Une fonction cryptographique ancienne protège les données.,encrypted = legacy_encrypt(data),1,python,.py
+90,crypto_005,crypto,CWE-327,Weak cryptography - legacy - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,encrypted = modern_encrypt(data),0,python,.py
+91,crypto_006,crypto,CWE-327,Weak cryptography - RC4,RC4 est un algorithme obsolète et vulnérable.,"algorithm = ""RC4""",1,python,.py
+92,crypto_006,crypto,CWE-327,Weak cryptography - RC4 - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"algorithm = ""AES-256-GCM""",0,python,.py
+93,crypto_007,crypto,CWE-327,Weak cryptography - cipher selection,Un algorithme faible est sélectionné pour le chiffrement.,"cipher_name = ""DES""",1,python,.py
+94,crypto_007,crypto,CWE-327,Weak cryptography - cipher selection - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"cipher_name = ""AES-256-GCM""",0,python,.py
+95,crypto_008,crypto,CWE-327,Weak cryptography - legacy cipher,Une implémentation cryptographique ancienne est utilisée.,encryptor = LegacyCipher(key),1,python,.py
+96,crypto_008,crypto,CWE-327,Weak cryptography - legacy cipher - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,encryptor = AESGCM(key),0,python,.py
+97,debug_001,debug,CWE-489,Debug mode enabled,Le mode debug est activé dans une application déployée.,app.run(debug=True),1,python,.py
+98,debug_001,debug,CWE-489,Debug mode enabled - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,app.run(debug=False),0,python,.py
+99,debug_002,debug,CWE-489,Debug configuration,Une configuration de production active le mode debug.,DEBUG = True,1,python,.py
+100,debug_002,debug,CWE-489,Debug configuration - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,DEBUG = False,0,python,.py
+101,debug_003,debug,CWE-489,Flask debug mode,Le mode debug de Flask est explicitement activé.,flask_app.debug = True,1,python,.py
+102,debug_003,debug,CWE-489,Flask debug mode - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,flask_app.debug = False,0,python,.py
+103,debug_004,debug,CWE-489,Server debug setting,Le paramètre debug du serveur est activé.,"server_config[""debug""] = True",1,python,.py
+104,debug_004,debug,CWE-489,Server debug setting - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"server_config[""debug""] = False",0,python,.py
+105,debug_005,debug,CWE-489,Application debug setting,Le mode debug applicatif est activé.,settings.DEBUG = True,1,python,.py
+106,debug_005,debug,CWE-489,Application debug setting - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,settings.DEBUG = False,0,python,.py
+107,debug_006,debug,CWE-489,Development mode,Le mode développement est laissé actif.,development_mode = True,1,python,.py
+108,debug_006,debug,CWE-489,Development mode - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,development_mode = False,0,python,.py
+109,debug_007,debug,CWE-489,Debug mode configuration,Une option de debug est activée dans la configuration.,"config[""DEBUG_MODE""] = True",1,python,.py
+110,debug_007,debug,CWE-489,Debug mode configuration - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,"config[""DEBUG_MODE""] = False",0,python,.py
+111,debug_008,debug,CWE-489,Debug flag,Un indicateur active le mode debug.,DEBUG_ENABLED = True,1,python,.py
+112,debug_008,debug,CWE-489,Debug flag - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,DEBUG_ENABLED = False,0,python,.py
+113,deserialize_001,deserialize,CWE-502,Unsafe deserialization - pickle,Des données externes sont désérialisées avec pickle.,obj = pickle.loads(user_data),1,python,.py
+114,deserialize_001,deserialize,CWE-502,Unsafe deserialization - pickle - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,obj = json.loads(user_data),0,python,.py
+115,deserialize_002,deserialize,CWE-502,Unsafe deserialization - file,Un fichier externe est chargé directement avec pickle.,data = pickle.load(uploaded_file),1,python,.py
+116,deserialize_002,deserialize,CWE-502,Unsafe deserialization - file - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,data = json.load(uploaded_file),0,python,.py
+117,deserialize_003,deserialize,CWE-502,Unsafe deserialization - request,Les données d'une requête sont désérialisées avec pickle.,session = pickle.loads(request.data),1,python,.py
+118,deserialize_003,deserialize,CWE-502,Unsafe deserialization - request - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,session = json.loads(request.data),0,python,.py
+119,deserialize_004,deserialize,CWE-502,Unsafe deserialization - dill,Un payload externe est désérialisé avec une bibliothèque dangereuse.,payload = dill.loads(raw_payload),1,python,.py
+120,deserialize_004,deserialize,CWE-502,Unsafe deserialization - dill - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,payload = json.loads(raw_payload),0,python,.py
+121,deserialize_005,deserialize,CWE-502,Unsafe deserialization - message,Un message externe est désérialisé avec pickle.,value = pickle.loads(message),1,python,.py
+122,deserialize_005,deserialize,CWE-502,Unsafe deserialization - message - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,value = json.loads(message),0,python,.py
+123,deserialize_006,deserialize,CWE-502,Unsafe YAML deserialization,YAML est chargé avec un loader non sécurisé.,"obj = yaml.load(data, Loader=yaml.Loader)",1,python,.py
+124,deserialize_006,deserialize,CWE-502,Unsafe YAML deserialization - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,obj = yaml.safe_load(data),0,python,.py
+125,deserialize_007,deserialize,CWE-502,Unsafe config deserialization,Une configuration externe est désérialisée avec pickle.,config = pickle.loads(config_data),1,python,.py
+126,deserialize_007,deserialize,CWE-502,Unsafe config deserialization - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,config = json.loads(config_data),0,python,.py
+127,deserialize_008,deserialize,CWE-502,Unsafe object deserialization,Un objet provenant d'une source externe est désérialisé dangereusement.,result = pickle.loads(serialized),1,python,.py
+128,deserialize_008,deserialize,CWE-502,Unsafe object deserialization - secure,Version sécurisée du même scénario avec une mesure de protection appropriée.,result = json.loads(serialized),0,python,.py

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>DevSecOps Security Dashboard</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet"
+    >
+
+    <link rel="stylesheet" href="../style.css">
+</head>
+
+<body>
+
+<header class="header">
+    <div>
+        <div class="brand-row">
+            <div class="brand-icon">DS</div>
+
+            <div>
+                <h1>DevSecOps Security</h1>
+                <p>Détection, analyse et suivi des vulnérabilités</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="header-actions">
+        <div class="status" id="api-status">
+            <span class="status-dot"></span>
+            <span id="api-status-text">Connexion à l'API…</span>
+        </div>
+
+        <button class="btn btn-header" id="scan-button">
+            Lancer un scan
+        </button>
+    </div>
+</header>
+
+
+<main class="container">
+
+    <!-- Message global -->
+    <div id="global-message" class="global-message" hidden></div>
+
+
+    <!-- STATISTIQUES -->
+    <section class="stats">
+
+        <div class="card">
+            <div class="card-label">
+                <span class="card-icon">◉</span>
+                Total des alertes
+            </div>
+
+            <p id="total-alerts">0</p>
+
+            <span class="card-description">
+                Scan sélectionné
+            </span>
+        </div>
+
+
+        <div class="card card-error">
+            <div class="card-label">
+                <span class="card-icon">!</span>
+                Alertes ERROR
+            </div>
+
+            <p id="error-alerts">0</p>
+
+            <span class="card-description">
+                Priorité élevée
+            </span>
+        </div>
+
+
+        <div class="card card-warning">
+            <div class="card-label">
+                <span class="card-icon">△</span>
+                Alertes WARNING
+            </div>
+
+            <p id="warning-alerts">0</p>
+
+            <span class="card-description">
+                À examiner
+            </span>
+        </div>
+
+
+        <div class="card">
+            <div class="card-label">
+                <span class="card-icon">⚙</span>
+                Outils de scan
+            </div>
+
+            <p id="tools-count">0</p>
+
+            <span class="card-description">
+                Semgrep · Gitleaks · Trivy
+            </span>
+        </div>
+
+    </section>
+
+
+    <!-- SCAN ACTUEL -->
+    <section class="panel current-scan-panel">
+
+        <div class="section-header">
+            <div>
+                <h2>Scan sélectionné</h2>
+                <p id="selected-scan-info">
+                    Aucun scan sélectionné
+                </p>
+            </div>
+
+            <button class="btn btn-secondary" id="refresh-button">
+                Actualiser
+            </button>
+        </div>
+
+        <div class="scan-summary">
+
+            <div>
+                <span class="summary-label">Projet</span>
+                <strong id="current-project">-</strong>
+            </div>
+
+            <div>
+                <span class="summary-label">Scan</span>
+                <strong id="current-scan-id">-</strong>
+            </div>
+
+            <div>
+                <span class="summary-label">Statut</span>
+                <span id="current-scan-status" class="status-badge">
+                    -
+                </span>
+            </div>
+
+            <div>
+                <span class="summary-label">Date</span>
+                <strong id="current-scan-date">-</strong>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- DISTRIBUTION -->
+    <section class="panel distribution">
+
+        <div class="distribution-head">
+
+            <div>
+                <h2>Répartition par sévérité</h2>
+                <p>Distribution des alertes du scan sélectionné</p>
+            </div>
+
+            <div class="legend" id="legend"></div>
+
+        </div>
+
+        <div
+            class="bar"
+            id="severity-bar"
+            role="img"
+            aria-label="Répartition des alertes par sévérité"
+        ></div>
+
+    </section>
+
+
+    <!-- HISTORIQUE -->
+    <section class="panel">
+
+        <div class="section-header">
+            <div>
+                <h2>Historique des scans</h2>
+                <p>
+                    Suivi des analyses effectuées sur le projet
+                </p>
+            </div>
+
+            <span class="history-count" id="history-count">
+                0 scan
+            </span>
+        </div>
+
+
+        <div id="history-loading" class="loading-small">
+            Chargement de l'historique…
+        </div>
+
+
+        <div class="table-container">
+            <table class="history-table">
+
+                <thead>
+                    <tr>
+                        <th>Scan</th>
+                        <th>Projet</th>
+                        <th>Date</th>
+                        <th>Durée</th>
+                        <th>Statut</th>
+                        <th class="num">Alertes</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody id="scans-body"></tbody>
+
+            </table>
+        </div>
+
+
+        <div id="history-empty" class="empty-state" hidden>
+            Aucun scan enregistré.
+        </div>
+
+    </section>
+
+
+    <!-- VULNERABILITES -->
+    <section class="panel">
+
+        <div class="section-header">
+
+            <div>
+                <h2>Vulnérabilités détectées</h2>
+
+                <p id="result-count">
+                    Résultats du scan
+                </p>
+            </div>
+
+        </div>
+
+
+        <!-- FILTRES -->
+        <div class="filters">
+
+            <input
+                type="search"
+                id="search"
+                placeholder="Rechercher un fichier, un type, un outil…"
+                aria-label="Rechercher"
+            >
+
+            <select
+                id="filter-severity"
+                aria-label="Filtrer par sévérité"
+            >
+                <option value="">
+                    Toutes les sévérités
+                </option>
+            </select>
+
+            <select
+                id="filter-tool"
+                aria-label="Filtrer par outil"
+            >
+                <option value="">
+                    Tous les outils
+                </option>
+            </select>
+
+        </div>
+
+
+        <div id="loading">
+            Chargement des vulnérabilités…
+        </div>
+
+
+        <div id="error-message" role="alert"></div>
+
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>ID</th>
+                        <th>Outil</th>
+                        <th>Type</th>
+                        <th>Sévérité</th>
+                        <th>Fichier</th>
+                        <th class="num">Ligne</th>
+                        <th>Action</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="vulnerabilities-body"></tbody>
+
+            </table>
+
+        </div>
+
+
+        <div id="empty" class="empty-state" hidden>
+            Aucune vulnérabilité ne correspond aux filtres.
+        </div>
+
+    </section>
+
+</main>
+
+
+<!-- OVERLAY -->
+<div
+    class="overlay"
+    id="overlay"
+    hidden
+></div>
+
+
+<!-- DRAWER DETAILS -->
+<aside
+    class="drawer"
+    id="drawer"
+    aria-hidden="true"
+    aria-labelledby="drawer-title"
+>
+
+    <div class="drawer-head">
+
+        <div>
+
+            <span id="drawer-severity"></span>
+
+            <h2 id="drawer-title">
+                Détails
+            </h2>
+
+            <p
+                id="drawer-location"
+                class="mono"
+            ></p>
+
+        </div>
+
+
+        <button
+            class="close"
+            id="drawer-close"
+            aria-label="Fermer"
+        >
+            &times;
+        </button>
+
+    </div>
+
+
+    <div
+        class="drawer-body"
+        id="drawer-body"
+    ></div>
+
+</aside>
+
+
+<script src="app.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,161 @@
+id,vuln_type,cwe,title,description,code_line,real_vulnerability,language
+PY0001,sqli,CWE-89,SQL Injection,User-controlled data is directly incorporated into an SQL statement.,"query = ""SELECT * FROM users WHERE id = "" + user_id",1,Python
+PY0002,sqli,CWE-89,SQL Injection,User-controlled data is directly incorporated into an SQL statement.,"query = ""SELECT * FROM users WHERE name = '"" + name + ""'""",1,Python
+PY0003,sqli,CWE-89,SQL Injection,User-controlled data is directly incorporated into an SQL statement.,"sql = ""DELETE FROM users WHERE id = "" + user_id",1,Python
+PY0004,sqli,CWE-89,SQL Injection,User-controlled data is directly incorporated into an SQL statement.,"sql = ""UPDATE users SET name = '"" + name + ""'""",1,Python
+PY0005,sqli,CWE-89,SQL Injection,User-controlled data is directly incorporated into an SQL statement.,"cursor.execute(""SELECT * FROM users WHERE id = "" + user_id)",1,Python
+PY0006,sqli,CWE-89,SQL Injection,User-controlled data is directly incorporated into an SQL statement.,"db.execute(""SELECT * FROM products WHERE name = '"" + product + ""'"")",1,Python
+PY0007,sqli,CWE-89,SQL Injection,User-controlled data is directly incorporated into an SQL statement.,"query = f""SELECT * FROM users WHERE id = {user_id}""",1,Python
+PY0008,sqli,CWE-89,SQL Injection,User-controlled data is directly incorporated into an SQL statement.,"sql = f""SELECT * FROM accounts WHERE name = '{name}'""",1,Python
+PY0009,sqli,CWE-89,SQL Injection,User-controlled data is directly incorporated into an SQL statement.,"cursor.execute(f""SELECT * FROM users WHERE id = {user_id}"")",1,Python
+PY0010,sqli,CWE-89,SQL Injection,User-controlled data is directly incorporated into an SQL statement.,"query = ""SELECT password FROM users WHERE login = '"" + login + ""'""",1,Python
+PY0011,sqli,CWE-89,SQL Injection,User input is passed through a parameterized database query.,"cursor.execute(""SELECT * FROM users WHERE id = ?"", (user_id,))",0,Python
+PY0012,sqli,CWE-89,SQL Injection,User input is passed through a parameterized database query.,"cursor.execute(""SELECT * FROM users WHERE name = ?"", (name,))",0,Python
+PY0013,sqli,CWE-89,SQL Injection,User input is passed through a parameterized database query.,"db.execute(""DELETE FROM users WHERE id = ?"", (user_id,))",0,Python
+PY0014,sqli,CWE-89,SQL Injection,User input is passed through a parameterized database query.,"cursor.execute(""UPDATE users SET name = ? WHERE id = ?"", (name, user_id))",0,Python
+PY0015,sqli,CWE-89,SQL Injection,User input is passed through a parameterized database query.,"cursor.execute(""SELECT * FROM products WHERE name = ?"", (product,))",0,Python
+PY0016,sqli,CWE-89,SQL Injection,User input is passed through a parameterized database query.,"query = ""SELECT * FROM users WHERE id = %s""",0,Python
+PY0017,sqli,CWE-89,SQL Injection,User input is passed through a parameterized database query.,"cursor.execute(query, (user_id,))",0,Python
+PY0018,sqli,CWE-89,SQL Injection,User input is passed through a parameterized database query.,User.query.filter_by(id=user_id).first(),0,Python
+PY0019,sqli,CWE-89,SQL Injection,User input is passed through a parameterized database query.,User.query.filter_by(name=name).first(),0,Python
+PY0020,sqli,CWE-89,SQL Injection,User input is passed through a parameterized database query.,"session.execute(text(""SELECT * FROM users WHERE id=:id""), {""id"": user_id})",0,Python
+PY0021,xss,CWE-79,Cross-Site-Scripting,User-controlled data is inserted into an HTML response without proper escaping.,"return ""<h1>"" + name + ""</h1>""",1,Python
+PY0022,xss,CWE-79,Cross-Site-Scripting,User-controlled data is inserted into an HTML response without proper escaping.,"return ""<div>"" + username + ""</div>""",1,Python
+PY0023,xss,CWE-79,Cross-Site-Scripting,User-controlled data is inserted into an HTML response without proper escaping.,"html = ""<p>"" + comment + ""</p>""",1,Python
+PY0024,xss,CWE-79,Cross-Site-Scripting,User-controlled data is inserted into an HTML response without proper escaping.,"response = ""<script>"" + value + ""</script>""",1,Python
+PY0025,xss,CWE-79,Cross-Site-Scripting,User-controlled data is inserted into an HTML response without proper escaping.,"return render_template_string(""<h1>"" + name + ""</h1>"")",1,Python
+PY0026,xss,CWE-79,Cross-Site-Scripting,User-controlled data is inserted into an HTML response without proper escaping.,"message = ""<div>"" + message + ""</div>""",1,Python
+PY0027,xss,CWE-79,Cross-Site-Scripting,User-controlled data is inserted into an HTML response without proper escaping.,"return ""<span>"" + request.args[""name""] + ""</span>""",1,Python
+PY0028,xss,CWE-79,Cross-Site-Scripting,User-controlled data is inserted into an HTML response without proper escaping.,"html = f""<h1>{name}</h1>""",1,Python
+PY0029,xss,CWE-79,Cross-Site-Scripting,User-controlled data is inserted into an HTML response without proper escaping.,"return f""<p>{comment}</p>""",1,Python
+PY0030,xss,CWE-79,Cross-Site-Scripting,User-controlled data is inserted into an HTML response without proper escaping.,"content = ""<body>"" + user_input + ""</body>""",1,Python
+PY0031,xss,CWE-79,Cross-Site-Scripting,User-controlled data is safely encoded or rendered using a template.,return escape(name),0,Python
+PY0032,xss,CWE-79,Cross-Site-Scripting,User-controlled data is safely encoded or rendered using a template.,"return render_template(""index.html"", name=name)",0,Python
+PY0033,xss,CWE-79,Cross-Site-Scripting,User-controlled data is safely encoded or rendered using a template.,"return render_template(""profile.html"", username=username)",0,Python
+PY0034,xss,CWE-79,Cross-Site-Scripting,User-controlled data is safely encoded or rendered using a template.,html = escape(comment),0,Python
+PY0035,xss,CWE-79,Cross-Site-Scripting,User-controlled data is safely encoded or rendered using a template.,"return jsonify({""message"": message})",0,Python
+PY0036,xss,CWE-79,Cross-Site-Scripting,User-controlled data is safely encoded or rendered using a template.,response = escape(value),0,Python
+PY0037,xss,CWE-79,Cross-Site-Scripting,User-controlled data is safely encoded or rendered using a template.,safe_name = html.escape(name),0,Python
+PY0038,xss,CWE-79,Cross-Site-Scripting,User-controlled data is safely encoded or rendered using a template.,"return render_template(""page.html"", value=value)",0,Python
+PY0039,xss,CWE-79,Cross-Site-Scripting,User-controlled data is safely encoded or rendered using a template.,content = html.escape(user_input),0,Python
+PY0040,xss,CWE-79,Cross-Site-Scripting,User-controlled data is safely encoded or rendered using a template.,"return jsonify({""content"": user_input})",0,Python
+PY0041,cmdi,CWE-78,Command Injection,User-controlled input can influence an operating system command.,"os.system(""ping "" + host)",1,Python
+PY0042,cmdi,CWE-78,Command Injection,User-controlled input can influence an operating system command.,"os.system(""ls "" + directory)",1,Python
+PY0043,cmdi,CWE-78,Command Injection,User-controlled input can influence an operating system command.,"subprocess.call(""ping "" + host, shell=True)",1,Python
+PY0044,cmdi,CWE-78,Command Injection,User-controlled input can influence an operating system command.,"subprocess.check_output(command, shell=True)",1,Python
+PY0045,cmdi,CWE-78,Command Injection,User-controlled input can influence an operating system command.,"subprocess.Popen(""cat "" + filename, shell=True)",1,Python
+PY0046,cmdi,CWE-78,Command Injection,User-controlled input can influence an operating system command.,"subprocess.run(""nslookup "" + domain, shell=True)",1,Python
+PY0047,cmdi,CWE-78,Command Injection,User-controlled input can influence an operating system command.,"os.popen(""grep "" + pattern + "" file.txt"")",1,Python
+PY0048,cmdi,CWE-78,Command Injection,User-controlled input can influence an operating system command.,"command = ""ping "" + host; os.system(command)",1,Python
+PY0049,cmdi,CWE-78,Command Injection,User-controlled input can influence an operating system command.,"subprocess.call(""curl "" + url, shell=True)",1,Python
+PY0050,cmdi,CWE-78,Command Injection,User-controlled input can influence an operating system command.,"subprocess.run(command, shell=True)",1,Python
+PY0051,cmdi,CWE-78,Command Injection,Command execution uses a fixed argument list without shell interpretation.,"subprocess.run([""ping"", ""-c"", ""1"", host], shell=False)",0,Python
+PY0052,cmdi,CWE-78,Command Injection,Command execution uses a fixed argument list without shell interpretation.,"subprocess.run([""ls"", directory], shell=False)",0,Python
+PY0053,cmdi,CWE-78,Command Injection,Command execution uses a fixed argument list without shell interpretation.,"subprocess.check_output([""ping"", ""-c"", ""1"", host])",0,Python
+PY0054,cmdi,CWE-78,Command Injection,Command execution uses a fixed argument list without shell interpretation.,"subprocess.run([""nslookup"", domain], shell=False)",0,Python
+PY0055,cmdi,CWE-78,Command Injection,Command execution uses a fixed argument list without shell interpretation.,"subprocess.run([""cat"", filename], shell=False)",0,Python
+PY0056,cmdi,CWE-78,Command Injection,Command execution uses a fixed argument list without shell interpretation.,"subprocess.Popen([""grep"", pattern, ""file.txt""])",0,Python
+PY0057,cmdi,CWE-78,Command Injection,Command execution uses a fixed argument list without shell interpretation.,"subprocess.run([""curl"", url], shell=False)",0,Python
+PY0058,cmdi,CWE-78,Command Injection,Command execution uses a fixed argument list without shell interpretation.,"subprocess.check_call([""ping"", ""-c"", ""1"", host])",0,Python
+PY0059,cmdi,CWE-78,Command Injection,Command execution uses a fixed argument list without shell interpretation.,"subprocess.run([""python"", script], shell=False)",0,Python
+PY0060,cmdi,CWE-78,Command Injection,Command execution uses a fixed argument list without shell interpretation.,"subprocess.run([""git"", ""status""], shell=False)",0,Python
+PY0061,pathtraver,CWE-22,Path Traversal,User-controlled input is used to access a filesystem path without sufficient validation.,"open(""/var/www/"" + filename).read()",1,Python
+PY0062,pathtraver,CWE-22,Path Traversal,User-controlled input is used to access a filesystem path without sufficient validation.,"open(base_dir + request.args[""file""]).read()",1,Python
+PY0063,pathtraver,CWE-22,Path Traversal,User-controlled input is used to access a filesystem path without sufficient validation.,"path = ""/tmp/"" + filename",1,Python
+PY0064,pathtraver,CWE-22,Path Traversal,User-controlled input is used to access a filesystem path without sufficient validation.,with open(user_path) as f:,1,Python
+PY0065,pathtraver,CWE-22,Path Traversal,User-controlled input is used to access a filesystem path without sufficient validation.,"file_path = directory + ""/"" + filename",1,Python
+PY0066,pathtraver,CWE-22,Path Traversal,User-controlled input is used to access a filesystem path without sufficient validation.,"send_file(""/uploads/"" + filename)",1,Python
+PY0067,pathtraver,CWE-22,Path Traversal,User-controlled input is used to access a filesystem path without sufficient validation.,"open(request.args[""path""]).read()",1,Python
+PY0068,pathtraver,CWE-22,Path Traversal,User-controlled input is used to access a filesystem path without sufficient validation.,"data = open(""../files/"" + filename).read()",1,Python
+PY0069,pathtraver,CWE-22,Path Traversal,User-controlled input is used to access a filesystem path without sufficient validation.,"path = os.path.join(""/var/www"", filename)",1,Python
+PY0070,pathtraver,CWE-22,Path Traversal,User-controlled input is used to access a filesystem path without sufficient validation.,return send_file(user_input),1,Python
+PY0071,pathtraver,CWE-22,Path Traversal,The requested file is restricted using path validation or filename sanitization.,"path = os.path.join(SAFE_DIR, secure_filename(filename))",0,Python
+PY0072,pathtraver,CWE-22,Path Traversal,The requested file is restricted using path validation or filename sanitization.,"filename = secure_filename(request.args[""file""])",0,Python
+PY0073,pathtraver,CWE-22,Path Traversal,The requested file is restricted using path validation or filename sanitization.,path = Path(SAFE_DIR) / safe_name,0,Python
+PY0074,pathtraver,CWE-22,Path Traversal,The requested file is restricted using path validation or filename sanitization.,if filename not in allowed_files: abort(404),0,Python
+PY0075,pathtraver,CWE-22,Path Traversal,The requested file is restricted using path validation or filename sanitization.,"path = safe_join(SAFE_DIR, filename)",0,Python
+PY0076,pathtraver,CWE-22,Path Traversal,The requested file is restricted using path validation or filename sanitization.,safe_name = os.path.basename(filename),0,Python
+PY0077,pathtraver,CWE-22,Path Traversal,The requested file is restricted using path validation or filename sanitization.,"if "".."" in filename: abort(400)",0,Python
+PY0078,pathtraver,CWE-22,Path Traversal,The requested file is restricted using path validation or filename sanitization.,path = Path(SAFE_DIR).resolve() / Path(filename).name,0,Python
+PY0079,pathtraver,CWE-22,Path Traversal,The requested file is restricted using path validation or filename sanitization.,filename = werkzeug.utils.secure_filename(filename),0,Python
+PY0080,pathtraver,CWE-22,Path Traversal,The requested file is restricted using path validation or filename sanitization.,"return send_file(os.path.join(SAFE_DIR, filename))",0,Python
+PY0081,debug,CWE-489,Active Debug Code,Debug mode is enabled and should not be active in production.,app.run(debug=True),1,Python
+PY0082,debug,CWE-489,Active Debug Code,Debug mode is enabled and should not be active in production.,"Flask(__name__, debug=True)",1,Python
+PY0083,debug,CWE-489,Active Debug Code,Debug mode is enabled and should not be active in production.,app.config['DEBUG'] = True,1,Python
+PY0084,debug,CWE-489,Active Debug Code,Debug mode is enabled and should not be active in production.,app.debug = True,1,Python
+PY0085,debug,CWE-489,Active Debug Code,Debug mode is enabled and should not be active in production.,application.run(debug=True),1,Python
+PY0086,debug,CWE-489,Active Debug Code,Debug mode is enabled and should not be active in production.,DEBUG = True,1,Python
+PY0087,debug,CWE-489,Active Debug Code,Debug mode is enabled and should not be active in production.,config['DEBUG'] = True,1,Python
+PY0088,debug,CWE-489,Active Debug Code,Debug mode is enabled and should not be active in production.,"app.run(host='0.0.0.0', debug=True)",1,Python
+PY0089,debug,CWE-489,Active Debug Code,Debug mode is enabled and should not be active in production.,flask_app.run(debug=True),1,Python
+PY0090,debug,CWE-489,Active Debug Code,Debug mode is enabled and should not be active in production.,server.start(debug=True),1,Python
+PY0091,debug,CWE-489,Active Debug Code,Debug mode is disabled.,app.run(debug=False),0,Python
+PY0092,debug,CWE-489,Active Debug Code,Debug mode is disabled.,"Flask(__name__, debug=False)",0,Python
+PY0093,debug,CWE-489,Active Debug Code,Debug mode is disabled.,app.config['DEBUG'] = False,0,Python
+PY0094,debug,CWE-489,Active Debug Code,Debug mode is disabled.,app.debug = False,0,Python
+PY0095,debug,CWE-489,Active Debug Code,Debug mode is disabled.,application.run(debug=False),0,Python
+PY0096,debug,CWE-489,Active Debug Code,Debug mode is disabled.,DEBUG = False,0,Python
+PY0097,debug,CWE-489,Active Debug Code,Debug mode is disabled.,config['DEBUG'] = False,0,Python
+PY0098,debug,CWE-489,Active Debug Code,Debug mode is disabled.,"app.run(host='0.0.0.0', debug=False)",0,Python
+PY0099,debug,CWE-489,Active Debug Code,Debug mode is disabled.,flask_app.run(debug=False),0,Python
+PY0100,debug,CWE-489,Active Debug Code,Debug mode is disabled.,server.start(debug=False),0,Python
+PY0101,secret,CWE-798,Hardcoded Secret,A sensitive credential or secret is embedded directly in source code.,"API_KEY = ""sk_live_123456""",1,Python
+PY0102,secret,CWE-798,Hardcoded Secret,A sensitive credential or secret is embedded directly in source code.,"PASSWORD = ""admin123""",1,Python
+PY0103,secret,CWE-798,Hardcoded Secret,A sensitive credential or secret is embedded directly in source code.,"SECRET_KEY = ""super-secret-key""",1,Python
+PY0104,secret,CWE-798,Hardcoded Secret,A sensitive credential or secret is embedded directly in source code.,"TOKEN = ""ghp_123456789""",1,Python
+PY0105,secret,CWE-798,Hardcoded Secret,A sensitive credential or secret is embedded directly in source code.,"AWS_SECRET = ""AKIA123456SECRET""",1,Python
+PY0106,secret,CWE-798,Hardcoded Secret,A sensitive credential or secret is embedded directly in source code.,"DB_PASSWORD = ""root123""",1,Python
+PY0107,secret,CWE-798,Hardcoded Secret,A sensitive credential or secret is embedded directly in source code.,"JWT_SECRET = ""my-secret""",1,Python
+PY0108,secret,CWE-798,Hardcoded Secret,A sensitive credential or secret is embedded directly in source code.,"API_TOKEN = ""token123""",1,Python
+PY0109,secret,CWE-798,Hardcoded Secret,A sensitive credential or secret is embedded directly in source code.,"PRIVATE_KEY = ""-----BEGIN PRIVATE KEY-----""",1,Python
+PY0110,secret,CWE-798,Hardcoded Secret,A sensitive credential or secret is embedded directly in source code.,"password = ""P@ssw0rd123""",1,Python
+PY0111,secret,CWE-798,Hardcoded Secret,The sensitive value is loaded from an external configuration or secret store.,"API_KEY = os.getenv(""API_KEY"")",0,Python
+PY0112,secret,CWE-798,Hardcoded Secret,The sensitive value is loaded from an external configuration or secret store.,"PASSWORD = os.getenv(""DB_PASSWORD"")",0,Python
+PY0113,secret,CWE-798,Hardcoded Secret,The sensitive value is loaded from an external configuration or secret store.,"SECRET_KEY = os.environ[""SECRET_KEY""]",0,Python
+PY0114,secret,CWE-798,Hardcoded Secret,The sensitive value is loaded from an external configuration or secret store.,"TOKEN = os.getenv(""API_TOKEN"")",0,Python
+PY0115,secret,CWE-798,Hardcoded Secret,The sensitive value is loaded from an external configuration or secret store.,"AWS_SECRET = os.environ.get(""AWS_SECRET"")",0,Python
+PY0116,secret,CWE-798,Hardcoded Secret,The sensitive value is loaded from an external configuration or secret store.,"DB_PASSWORD = os.getenv(""DB_PASSWORD"")",0,Python
+PY0117,secret,CWE-798,Hardcoded Secret,The sensitive value is loaded from an external configuration or secret store.,"JWT_SECRET = os.getenv(""JWT_SECRET"")",0,Python
+PY0118,secret,CWE-798,Hardcoded Secret,The sensitive value is loaded from an external configuration or secret store.,"API_TOKEN = config[""API_TOKEN""]",0,Python
+PY0119,secret,CWE-798,Hardcoded Secret,The sensitive value is loaded from an external configuration or secret store.,"PRIVATE_KEY = os.environ.get(""PRIVATE_KEY"")",0,Python
+PY0120,secret,CWE-798,Hardcoded Secret,The sensitive value is loaded from an external configuration or secret store.,"password = get_secret(""DB_PASSWORD"")",0,Python
+PY0121,crypto,CWE-327,Weak Cryptography,A weak or outdated cryptographic algorithm is used.,hashlib.md5(password.encode()).hexdigest(),1,Python
+PY0122,crypto,CWE-327,Weak Cryptography,A weak or outdated cryptographic algorithm is used.,hashlib.sha1(data).hexdigest(),1,Python
+PY0123,crypto,CWE-327,Weak Cryptography,A weak or outdated cryptographic algorithm is used.,md5(data),1,Python
+PY0124,crypto,CWE-327,Weak Cryptography,A weak or outdated cryptographic algorithm is used.,sha1(password),1,Python
+PY0125,crypto,CWE-327,Weak Cryptography,A weak or outdated cryptographic algorithm is used.,hashlib.md5(token.encode()),1,Python
+PY0126,crypto,CWE-327,Weak Cryptography,A weak or outdated cryptographic algorithm is used.,hashlib.sha1(secret.encode()),1,Python
+PY0127,crypto,CWE-327,Weak Cryptography,A weak or outdated cryptographic algorithm is used.,Crypto.Hash.MD5.new(data),1,Python
+PY0128,crypto,CWE-327,Weak Cryptography,A weak or outdated cryptographic algorithm is used.,Crypto.Hash.SHA1.new(data),1,Python
+PY0129,crypto,CWE-327,Weak Cryptography,A weak or outdated cryptographic algorithm is used.,"hashlib.new('md5', data)",1,Python
+PY0130,crypto,CWE-327,Weak Cryptography,A weak or outdated cryptographic algorithm is used.,"hashlib.new('sha1', data)",1,Python
+PY0131,crypto,CWE-327,Weak Cryptography,A modern or appropriate cryptographic mechanism is used.,"bcrypt.hashpw(password.encode(), bcrypt.gensalt())",0,Python
+PY0132,crypto,CWE-327,Weak Cryptography,A modern or appropriate cryptographic mechanism is used.,argon2.PasswordHasher().hash(password),0,Python
+PY0133,crypto,CWE-327,Weak Cryptography,A modern or appropriate cryptographic mechanism is used.,hashlib.sha256(data).hexdigest(),0,Python
+PY0134,crypto,CWE-327,Weak Cryptography,A modern or appropriate cryptographic mechanism is used.,hashlib.sha512(data).hexdigest(),0,Python
+PY0135,crypto,CWE-327,Weak Cryptography,A modern or appropriate cryptographic mechanism is used.,"hmac.new(key, data, hashlib.sha256)",0,Python
+PY0136,crypto,CWE-327,Weak Cryptography,A modern or appropriate cryptographic mechanism is used.,"hmac.new(key, data, hashlib.sha512)",0,Python
+PY0137,crypto,CWE-327,Weak Cryptography,A modern or appropriate cryptographic mechanism is used.,secrets.token_hex(32),0,Python
+PY0138,crypto,CWE-327,Weak Cryptography,A modern or appropriate cryptographic mechanism is used.,secrets.token_urlsafe(32),0,Python
+PY0139,crypto,CWE-327,Weak Cryptography,A modern or appropriate cryptographic mechanism is used.,cryptography.fernet.Fernet(key),0,Python
+PY0140,crypto,CWE-327,Weak Cryptography,A modern or appropriate cryptographic mechanism is used.,"bcrypt.checkpw(password.encode(), hashed)",0,Python
+PY0141,deserialize,CWE-502,Insecure Deserialization,Untrusted data is deserialized using a potentially unsafe mechanism.,pickle.loads(user_data),1,Python
+PY0142,deserialize,CWE-502,Insecure Deserialization,Untrusted data is deserialized using a potentially unsafe mechanism.,pickle.load(file),1,Python
+PY0143,deserialize,CWE-502,Insecure Deserialization,Untrusted data is deserialized using a potentially unsafe mechanism.,yaml.load(data),1,Python
+PY0144,deserialize,CWE-502,Insecure Deserialization,Untrusted data is deserialized using a potentially unsafe mechanism.,yaml.load(stream),1,Python
+PY0145,deserialize,CWE-502,Insecure Deserialization,Untrusted data is deserialized using a potentially unsafe mechanism.,dill.loads(data),1,Python
+PY0146,deserialize,CWE-502,Insecure Deserialization,Untrusted data is deserialized using a potentially unsafe mechanism.,marshal.loads(data),1,Python
+PY0147,deserialize,CWE-502,Insecure Deserialization,Untrusted data is deserialized using a potentially unsafe mechanism.,joblib.load(user_file),1,Python
+PY0148,deserialize,CWE-502,Insecure Deserialization,Untrusted data is deserialized using a potentially unsafe mechanism.,torch.load(user_file),1,Python
+PY0149,deserialize,CWE-502,Insecure Deserialization,Untrusted data is deserialized using a potentially unsafe mechanism.,pickle.Unpickler(file).load(),1,Python
+PY0150,deserialize,CWE-502,Insecure Deserialization,Untrusted data is deserialized using a potentially unsafe mechanism.,pickle.loads(request.data),1,Python
+PY0151,deserialize,CWE-502,Insecure Deserialization,Input is parsed using a safer data serialization format.,json.loads(user_data),0,Python
+PY0152,deserialize,CWE-502,Insecure Deserialization,Input is parsed using a safer data serialization format.,json.load(file),0,Python
+PY0153,deserialize,CWE-502,Insecure Deserialization,Input is parsed using a safer data serialization format.,yaml.safe_load(data),0,Python
+PY0154,deserialize,CWE-502,Insecure Deserialization,Input is parsed using a safer data serialization format.,yaml.safe_load(stream),0,Python
+PY0155,deserialize,CWE-502,Insecure Deserialization,Input is parsed using a safer data serialization format.,json.loads(request.data),0,Python
+PY0156,deserialize,CWE-502,Insecure Deserialization,Input is parsed using a safer data serialization format.,json.load(request.files['file']),0,Python
+PY0157,deserialize,CWE-502,Insecure Deserialization,Input is parsed using a safer data serialization format.,ast.literal_eval(data),0,Python
+PY0158,deserialize,CWE-502,Insecure Deserialization,Input is parsed using a safer data serialization format.,json.loads(response.text),0,Python
+PY0159,deserialize,CWE-502,Insecure Deserialization,Input is parsed using a safer data serialization format.,safe_data = json.loads(data),0,Python
+PY0160,deserialize,CWE-502,Insecure Deserialization,Input is parsed using a safer data serialization format.,payload = yaml.safe_load(request.data),0,Python
