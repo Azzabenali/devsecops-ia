@@ -14,10 +14,12 @@ jobs:
 
     steps:
       - name: Checkout du projet
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Installer Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.14"
 
@@ -28,11 +30,19 @@ jobs:
           pip install semgrep
 
       - name: Installer Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/gitleaks/gitleaks/master/scripts/install.sh | sh -s -- -b /usr/local/bin
 
-      - name: Installer Trivy
+      - name: Analyse Gitleaks
+        run: |
+          gitleaks detect \
+            --source . \
+            --config gitleaks.toml \
+            --baseline-path gitleaks-baseline.json \
+            --redact \
+            --no-banner
+
+      - name: Analyse Trivy
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: "fs"
@@ -45,7 +55,7 @@ jobs:
             --config p/python \
             --json \
             --output semgrep-ci.json \
-            . || true
+            .
 
       - name: Vérifier les tests
         run: |
