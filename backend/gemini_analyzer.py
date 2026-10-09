@@ -8,13 +8,17 @@ from google.genai import errors
 
 load_dotenv()
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 
-if not GEMINI_API_KEY:
-    raise RuntimeError("GEMINI_API_KEY n'est pas configurée dans .env")
 
-client = genai.Client(api_key=GEMINI_API_KEY)
+def get_gemini_client():
+    """Initialise Gemini uniquement lorsqu'une analyse est demandée."""
+    api_key = os.getenv("GEMINI_API_KEY")
+
+    if not api_key:
+        return None
+
+    return genai.Client(api_key=api_key)
 
 
 def _clean_json_response(text: str) -> dict:
@@ -57,7 +61,17 @@ def analyze_vulnerability(alert: dict) -> dict:
     - recommandation
     - correction proposée
     """
+    client = get_gemini_client()
 
+    if client is None:
+        return {
+            "explanation": "Analyse IA indisponible : clé API Gemini non configurée.",
+            "impact": "",
+            "cause": "",
+            "recommendation": "",
+            "suggested_fix": "",
+            "status": "unavailable"
+        }
     prompt = f"""
 Tu es un expert en cybersécurité spécialisé en AppSec et DevSecOps.
 
