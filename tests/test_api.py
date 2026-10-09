@@ -1,12 +1,16 @@
-
+import sys
 import sqlite3
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 import pytest
 from fastapi.testclient import TestClient
 
 from backend import database
 from backend import main
-
 
 @pytest.fixture
 def client(tmp_path, monkeypatch):

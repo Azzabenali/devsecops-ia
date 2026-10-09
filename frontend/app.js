@@ -1,114 +1,85 @@
 
-/* =========================================================
-   DEVSECOPS AI DASHBOARD
-   FastAPI + XGBoost
-   ========================================================= */
-
 const API_URL = "http://127.0.0.1:8000";
 
 let allVulnerabilities = [];
 let allScans = [];
+
 let selectedScanId = null;
 
-/*
- * XGBoost benchmark obtained during the ML comparison.
- * These are TEST-SET metrics, not probabilities of the current scan.
- */
-const XGBOOST_METRICS = {
-    accuracy: 64.85,
-    precision: 68.69,
-    recall: 74.63,
-    f1: 71.54
-};
 
 /* =========================================================
-   HELPERS
-   ========================================================= */
+   UTILITAIRES
+========================================================= */
 
 function esc(value) {
-    if (value === null || value === undefined) {
-        return "";
+    if (
+        value === null ||
+        value === undefined ||
+        value === ""
+    ) {
+        return "-";
     }
 
     return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
 }
+
 
 function sevKey(severity) {
-    return String(severity || "")
-        .trim()
-        .toUpperCase();
+
+    const s = String(severity || "").toUpperCase();
+
+    return ["ERROR", "WARNING", "INFO"].includes(s)
+        ? s
+        : "OTHER";
 }
 
-function priorityKey(priority) {
-    return String(priority || "")
-        .trim()
-        .toUpperCase();
+
+function setStatus(ok) {
+
+    const box = document.getElementById("api-status");
+
+    box.classList.toggle("ok", ok);
+    box.classList.toggle("down", !ok);
+
+    document.getElementById("api-status-text").textContent =
+        ok
+            ? "API connectée"
+            : "API injoignable";
 }
 
-function setStatus(online, text) {
-    const statusText = document.getElementById("api-status-text");
-    const dot = document.querySelector(".status-dot");
-
-    if (statusText) {
-        statusText.textContent = text;
-    }
-
-    if (dot) {
-        dot.classList.remove("online", "offline");
-
-        if (online) {
-            dot.classList.add("online");
-        } else {
-            dot.classList.add("offline");
-        }
-    }
-}
 
 function showMessage(message, type = "info") {
-    const element = document.getElementById("global-message");
 
-    if (!element) {
-        return;
+    const box = document.getElementById("global-message");
+
+    box.textContent = message;
+
+    box.className = "global-message";
+
+    if (type === "success") {
+        box.classList.add("success");
     }
 
-    element.textContent = message;
+    if (type === "error") {
+        box.classList.add("error");
+    }
 
-    element.style.color =
-        type === "error"
-            ? "#dc2626"
-            : type === "success"
-                ? "#15803d"
-                : "#334155";
-
-    element.style.background =
-        type === "error"
-            ? "#fef2f2"
-            : type === "success"
-                ? "#f0fdf4"
-                : "#f8fafc";
-
-    element.style.borderColor =
-        type === "error"
-            ? "#fecaca"
-            : type === "success"
-                ? "#bbf7d0"
-                : "#e2e8f0";
-
-    element.classList.add("show");
+    box.hidden = false;
 
     setTimeout(() => {
-        element.classList.remove("show");
-    }, 4500);
+        box.hidden = true;
+    }, 4000);
 }
 
+
 function formatDate(value) {
+
     if (!value) {
-        return "—";
+        return "-";
     }
 
     const date = new Date(value);
@@ -118,1189 +89,1230 @@ function formatDate(value) {
     }
 
     return date.toLocaleString("fr-FR", {
-        dateStyle: "medium",
-        timeStyle: "short"
+        dateStyle: "short",
+        timeStyle: "medium"
     });
 }
 
+
 function calculateDuration(start, end) {
+
     if (!start || !end) {
-        return "—";
+        return "-";
     }
 
-    const diff = new Date(end) - new Date(start);
+    const startDate = new Date(start);
+    const endDate = new Date(end);
 
-    if (Number.isNaN(diff)) {
-        return "—";
+    const seconds =
+        Math.max(
+            0,
+            Math.round(
+                (endDate - startDate) / 1000
+            )
+        );
+
+    if (seconds < 60) {
+        return `${seconds}s`;
     }
 
-    if (diff < 1000) {
-        return "< 1 s";
-    }
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
 
-    if (diff < 60000) {
-        return `${Math.round(diff / 1000)} s`;
-    }
-
-    return `${Math.floor(diff / 60000)} min`;
+    return `${minutes}m ${remainingSeconds}s`;
 }
 
-function severityBadge(severity) {
-    const key = sevKey(severity);
-
-    if (key === "ERROR" || key === "CRITICAL") {
-        return `<span class="badge badge-error">${esc(severity)}</span>`;
-    }
-
-    if (key === "WARNING" || key === "HIGH") {
-        return `<span class="badge badge-warning">${esc(severity)}</span>`;
-    }
-
-    return `<span class="badge badge-info">${esc(severity || "INFO")}</span>`;
-}
-
-function priorityBadge(priority) {
-    const key = priorityKey(priority);
-
-    if (key === "CRITIQUE") {
-        return `<span class="badge badge-critical">CRITIQUE</span>`;
-    }
-
-    if (key === "ÉLEVÉE" || key === "ELEVEE" || key === "HIGH") {
-        return `<span class="badge badge-high">ÉLEVÉE</span>`;
-    }
-
-    if (key === "MOYENNE" || key === "MEDIUM") {
-        return `<span class="badge badge-medium">MOYENNE</span>`;
-    }
-
-    return `<span class="badge badge-low">FAIBLE</span>`;
-}
-
-function probabilityClass(probability) {
-    const p = Number(probability || 0);
-
-    if (p >= 0.8) {
-        return "probability-high";
-    }
-
-    if (p >= 0.5) {
-        return "probability-medium";
-    }
-
-    return "probability-low";
-}
-
-function probabilityHTML(probability) {
-    if (probability === null || probability === undefined) {
-        return "—";
-    }
-
-    const value = Number(probability);
-
-    if (Number.isNaN(value)) {
-        return "—";
-    }
-
-    const percent = (value * 100).toFixed(2);
-
-    return `
-        <span class="probability ${probabilityClass(value)}">
-            ${percent}%
-        </span>
-    `;
-}
 
 /* =========================================================
-   API
-   ========================================================= */
-
-async function apiGet(endpoint) {
-    const response = await fetch(`${API_URL}${endpoint}`);
-
-    if (!response.ok) {
-        throw new Error(`Erreur API ${response.status}`);
-    }
-
-    return response.json();
-}
-
-/* =========================================================
-   DASHBOARD
-   ========================================================= */
+   CHARGEMENT INITIAL
+========================================================= */
 
 async function loadDashboard() {
-    try {
-        setStatus(true, "API connectée");
 
-        await Promise.all([
-            loadScans(),
-            loadVulnerabilities()
-        ]);
+    const loading =
+        document.getElementById("loading");
 
-        updateModelPerformance();
+    const errorMessage =
+        document.getElementById("error-message");
 
-    } catch (error) {
-        console.error(error);
+    loading.style.display = "block";
 
-        setStatus(false, "API inaccessible");
-
-        showMessage(
-            "Impossible de contacter l'API FastAPI.",
-            "error"
-        );
-    }
-}
-
-/* =========================================================
-   VULNERABILITIES
-   ========================================================= */
-
-async function loadVulnerabilities() {
-    const loading = document.getElementById("loading");
-    const error = document.getElementById("error-message");
-
-    if (loading) {
-        loading.classList.remove("hidden");
-    }
-
-    if (error) {
-        error.classList.add("hidden");
-    }
+    errorMessage.textContent = "";
 
     try {
-        const data = await apiGet("/vulnerabilities");
 
-        if (Array.isArray(data)) {
-            allVulnerabilities = data;
-        } else if (Array.isArray(data.vulnerabilities)) {
-            allVulnerabilities = data.vulnerabilities;
-        } else {
-            allVulnerabilities = [];
+        setStatus(false);
+
+        await loadScans();
+
+        const response =
+            await fetch(`${API_URL}/vulnerabilities`);
+
+        if (!response.ok) {
+            throw new Error(
+                "Erreur lors de la récupération des vulnérabilités"
+            );
         }
 
-        displayStatistics(allVulnerabilities);
-        displayRiskAnalysis(allVulnerabilities);
-        displayAIAnalysis(allVulnerabilities);
-        displayPipeline(allVulnerabilities);
+        allVulnerabilities =
+            await response.json();
 
-        fillFilters(allVulnerabilities);
+        setStatus(true);
 
-        applyFilters();
+        if (!selectedScanId) {
+
+            displayStatistics([]);
+            displayDistribution([]);
+            displayVulnerabilities([]);
+
+            return;
+        }
+
+        selectScan(selectedScanId);
 
     } catch (error) {
+
         console.error(error);
 
-        if (error) {
-            error.classList.remove("hidden");
-        }
+        setStatus(false);
 
-        throw error;
+        errorMessage.textContent =
+            "Impossible de contacter l'API FastAPI. " +
+            "Vérifiez qu'elle tourne sur " +
+            API_URL +
+            ".";
 
     } finally {
-        if (loading) {
-            loading.classList.add("hidden");
-        }
+
+        loading.style.display = "none";
     }
 }
 
+
 /* =========================================================
-   SCANS
-   ========================================================= */
+   HISTORIQUE DES SCANS
+========================================================= */
 
 async function loadScans() {
-    const data = await apiGet("/scans");
 
-    if (Array.isArray(data)) {
-        allScans = data;
-    } else if (Array.isArray(data.scans)) {
-        allScans = data.scans;
-    } else {
-        allScans = [];
-    }
+    const loading =
+        document.getElementById("history-loading");
 
-    displayScanHistory(allScans);
+    const empty =
+        document.getElementById("history-empty");
 
-    const count = document.getElementById("history-count");
+    const body =
+        document.getElementById("scans-body");
 
-    if (count) {
-        count.textContent =
-            `${allScans.length} scan${allScans.length > 1 ? "s" : ""}`;
-    }
+    loading.style.display = "block";
 
-    if (allScans.length > 0) {
-        const latest = allScans[0];
+    try {
 
-        if (selectedScanId === null) {
-            selectedScanId = latest.id;
+        const response =
+            await fetch(`${API_URL}/scans`);
+
+        if (!response.ok) {
+            throw new Error(
+                "Impossible de récupérer les scans"
+            );
         }
 
-        updateCurrentScan(latest);
+        allScans =
+            await response.json();
+
+        body.innerHTML = "";
+
+        document.getElementById(
+            "history-count"
+        ).textContent =
+            `${allScans.length} scan${allScans.length > 1 ? "s" : ""}`;
+
+        if (allScans.length === 0) {
+
+            empty.hidden = false;
+
+            selectedScanId = null;
+
+            return;
+        }
+
+        empty.hidden = true;
+
+        allScans.forEach(scan => {
+
+            const row =
+                document.createElement("tr");
+
+            const status =
+                String(scan.status || "").toLowerCase();
+
+            const statusClass =
+                status === "success"
+                    ? "success"
+                    : "error";
+
+            row.innerHTML = `
+                <td>
+                    <strong>#${esc(scan.id)}</strong>
+                </td>
+
+                <td>
+                    ${esc(scan.project)}
+                </td>
+
+                <td>
+                    ${esc(formatDate(scan.started_at))}
+                </td>
+
+                <td>
+                    ${esc(
+                        calculateDuration(
+                            scan.started_at,
+                            scan.finished_at
+                        )
+                    )}
+                </td>
+
+                <td>
+                    <span class="status-badge ${statusClass}">
+                        ${esc(scan.status)}
+                    </span>
+                </td>
+
+                <td class="num">
+                    <strong>
+                        ${esc(scan.total_alerts)}
+                    </strong>
+                </td>
+
+                <td>
+                    <button
+                        class="btn-history ${String(selectedScanId) === String(scan.id) ? "active" : ""}"
+                        data-scan-id="${esc(scan.id)}"
+                    >
+                        Voir
+                    </button>
+                </td>
+            `;
+
+            body.appendChild(row);
+        });
+
+        if (!selectedScanId) {
+            selectedScanId = allScans[0].id;
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        body.innerHTML = "";
+
+        empty.hidden = false;
+
+        empty.textContent =
+            "Impossible de charger l'historique.";
+
+    } finally {
+
+        loading.style.display = "none";
     }
 }
 
+
 /* =========================================================
-   STATISTICS
-   ========================================================= */
+   SÉLECTION D'UN SCAN
+========================================================= */
+
+function selectScan(scanId) {
+
+    selectedScanId = Number(scanId);
+
+    const scan =
+        allScans.find(
+            s => Number(s.id) === selectedScanId
+        );
+
+    if (!scan) {
+        return;
+    }
+
+    const vulnerabilities =
+        allVulnerabilities.filter(
+            vulnerability =>
+                Number(vulnerability.scan_id) ===
+                selectedScanId
+        );
+
+    document.getElementById(
+        "selected-scan-info"
+    ).textContent =
+        `Analyse #${scan.id} du projet ${scan.project}`;
+
+    document.getElementById(
+        "current-project"
+    ).textContent =
+        scan.project || "-";
+
+    document.getElementById(
+        "current-scan-id"
+    ).textContent =
+        `#${scan.id}`;
+
+    const statusElement =
+        document.getElementById(
+            "current-scan-status"
+        );
+
+    statusElement.textContent =
+        scan.status || "-";
+
+    statusElement.className =
+        "status-badge " +
+        (
+            scan.status === "success"
+                ? ""
+                : "error"
+        );
+
+    document.getElementById(
+        "current-scan-date"
+    ).textContent =
+        formatDate(scan.started_at);
+
+    displayStatistics(
+        vulnerabilities
+    );
+
+    displayDistribution(
+        vulnerabilities
+    );
+
+    fillFilters(
+        vulnerabilities
+    );
+
+    applyFilters(
+        vulnerabilities
+    );
+
+    document
+        .querySelectorAll(".btn-history")
+        .forEach(button => {
+
+            button.classList.toggle(
+                "active",
+                Number(button.dataset.scanId) ===
+                selectedScanId
+            );
+        });
+}
+
+
+/* =========================================================
+   STATISTIQUES
+========================================================= */
 
 function displayStatistics(list) {
-    const total = list.length;
 
-    const errors = list.filter(
-        v => sevKey(v.severity) === "ERROR"
-    ).length;
+    const count =
+        severity =>
+            list.filter(
+                vulnerability =>
+                    sevKey(vulnerability.severity) ===
+                    severity
+            ).length;
 
-    const warnings = list.filter(
-        v => sevKey(v.severity) === "WARNING"
-    ).length;
+    document.getElementById(
+        "total-alerts"
+    ).textContent =
+        list.length;
 
-    const highPriority = list.filter(v => {
-        const p = priorityKey(v.ml_priority);
+    document.getElementById(
+        "error-alerts"
+    ).textContent =
+        count("ERROR");
 
-        return (
-            p === "CRITIQUE" ||
-            p === "ÉLEVÉE" ||
-            p === "ELEVEE" ||
-            p === "HIGH"
+    document.getElementById(
+        "warning-alerts"
+    ).textContent =
+        count("WARNING");
+
+    document.getElementById(
+        "tools-count"
+    ).textContent =
+        new Set(
+            list.map(
+                vulnerability =>
+                    vulnerability.tool
+            )
+        ).size;
+}
+
+
+/* =========================================================
+   DISTRIBUTION
+========================================================= */
+
+function displayDistribution(list) {
+
+    const bar =
+        document.getElementById(
+            "severity-bar"
         );
-    }).length;
 
-    setText("total-alerts", total);
-    setText("error-alerts", errors);
-    setText("warning-alerts", warnings);
-    setText("high-priority-alerts", highPriority);
+    const legend =
+        document.getElementById(
+            "legend"
+        );
 
-    setText("risk-total", total);
-    setText("risk-error-count", errors);
-    setText("risk-warning-count", warnings);
+    bar.innerHTML = "";
+    legend.innerHTML = "";
 
-    const info = list.filter(
-        v => !["ERROR", "WARNING"].includes(sevKey(v.severity))
-    ).length;
+    if (list.length === 0) {
 
-    setText("risk-info-count", info);
-}
-
-/* =========================================================
-   RISK ANALYSIS
-   ========================================================= */
-
-function displayRiskAnalysis(list) {
-    const total = list.length || 1;
-
-    const errors = list.filter(
-        v => sevKey(v.severity) === "ERROR"
-    ).length;
-
-    const warnings = list.filter(
-        v => sevKey(v.severity) === "WARNING"
-    ).length;
-
-    const info = list.filter(
-        v => !["ERROR", "WARNING"].includes(sevKey(v.severity))
-    ).length;
-
-    setWidth(
-        "risk-error-bar",
-        (errors / total) * 100
-    );
-
-    setWidth(
-        "risk-warning-bar",
-        (warnings / total) * 100
-    );
-
-    setWidth(
-        "risk-info-bar",
-        (info / total) * 100
-    );
-}
-
-/* =========================================================
-   AI / XGBOOST ANALYSIS
-   ========================================================= */
-
-function displayAIAnalysis(list) {
-    if (!list.length) {
-        setText("ai-average", "0%");
-        setText("priority-critical", 0);
-        setText("priority-high", 0);
-        setText("priority-medium", 0);
-        setText("priority-low", 0);
+        bar.innerHTML =
+            `<span style="width:100%"></span>`;
 
         return;
     }
 
-    const probabilities = list
-        .map(v => Number(v.ml_probability))
-        .filter(p => !Number.isNaN(p));
+    const counts = {};
 
-    const average =
-        probabilities.length > 0
-            ? probabilities.reduce((sum, p) => sum + p, 0) /
-              probabilities.length
-            : 0;
+    list.forEach(vulnerability => {
 
-    setText(
-        "ai-average",
-        `${(average * 100).toFixed(2)}%`
-    );
+        const key =
+            sevKey(vulnerability.severity);
 
-    const critical = list.filter(
-        v => priorityKey(v.ml_priority) === "CRITIQUE"
-    ).length;
+        counts[key] =
+            (counts[key] || 0) + 1;
+    });
 
-    const high = list.filter(v => {
-        const p = priorityKey(v.ml_priority);
+    const keys =
+        Object.keys(counts);
 
-        return (
-            p === "ÉLEVÉE" ||
-            p === "ELEVEE" ||
-            p === "HIGH"
+    keys.forEach(key => {
+
+        const percentage =
+            (counts[key] / list.length) * 100;
+
+        const segment =
+            document.createElement("span");
+
+        segment.className =
+            `sev-${key}`;
+
+        segment.style.width =
+            `${percentage}%`;
+
+        segment.style.background =
+            "var(--c)";
+
+        segment.title =
+            `${key} : ${counts[key]}`;
+
+        bar.appendChild(segment);
+
+        const legendItem =
+            document.createElement("span");
+
+        legendItem.className =
+            `sev-${key}`;
+
+        legendItem.innerHTML =
+            `
+                <i style="background:var(--c)"></i>
+                ${esc(key)} (${counts[key]})
+            `;
+
+        legend.appendChild(
+            legendItem
         );
-    }).length;
-
-    const medium = list.filter(v => {
-        const p = priorityKey(v.ml_priority);
-
-        return p === "MOYENNE" || p === "MEDIUM";
-    }).length;
-
-    const low = list.filter(v => {
-        const p = priorityKey(v.ml_priority);
-
-        return (
-            p === "FAIBLE" ||
-            p === "LOW" ||
-            p === ""
-        );
-    }).length;
-
-    setText("priority-critical", critical);
-    setText("priority-high", high);
-    setText("priority-medium", medium);
-    setText("priority-low", low);
-
-    /*
-     * Optional circular score.
-     */
-    const circle = document.querySelector(".ai-circle");
-
-    if (circle) {
-        const degrees = average * 360;
-
-        circle.style.setProperty(
-            "--score",
-            `${degrees}deg`
-        );
-
-        const value = circle.querySelector("span");
-
-        if (value) {
-            value.textContent =
-                `${Math.round(average * 100)}%`;
-        }
-    }
+    });
 }
 
-/* =========================================================
-   MODEL PERFORMANCE
-   ========================================================= */
-
-function updateModelPerformance() {
-    setText(
-        "model-accuracy",
-        `${XGBOOST_METRICS.accuracy.toFixed(2)}%`
-    );
-
-    setText(
-        "model-precision",
-        `${XGBOOST_METRICS.precision.toFixed(2)}%`
-    );
-
-    setText(
-        "model-recall",
-        `${XGBOOST_METRICS.recall.toFixed(2)}%`
-    );
-
-    setText(
-        "model-f1",
-        `${XGBOOST_METRICS.f1.toFixed(2)}%`
-    );
-}
 
 /* =========================================================
-   PIPELINE
-   ========================================================= */
-
-function displayPipeline(list) {
-    const semgrep = list.filter(
-        v => String(v.tool || "").toLowerCase() === "semgrep"
-    ).length;
-
-    const gitleaks = list.filter(
-        v => String(v.tool || "").toLowerCase() === "gitleaks"
-    ).length;
-
-    const trivy = list.filter(
-        v => String(v.tool || "").toLowerCase() === "trivy"
-    ).length;
-
-    setText("semgrep-count", semgrep);
-    setText("gitleaks-count", gitleaks);
-    setText("trivy-count", trivy);
-
-    setText(
-        "xgboost-count",
-        list.filter(v =>
-            v.ml_prediction !== null &&
-            v.ml_prediction !== undefined
-        ).length
-    );
-}
-
-/* =========================================================
-   FILTERS
-   ========================================================= */
+   FILTRES
+========================================================= */
 
 function fillFilters(list) {
-    const tools = [
-        ...new Set(
-            list
-                .map(v => v.tool)
-                .filter(Boolean)
-        )
-    ];
+
+    fillSelect(
+        "filter-severity",
+        "Toutes les sévérités",
+        [
+            ...new Set(
+                list.map(
+                    vulnerability =>
+                        vulnerability.severity
+                )
+            )
+        ]
+    );
 
     fillSelect(
         "filter-tool",
-        tools
+        "Tous les outils",
+        [
+            ...new Set(
+                list.map(
+                    vulnerability =>
+                        vulnerability.tool
+                )
+            )
+        ]
     );
 }
 
-function fillSelect(id, values) {
-    const select = document.getElementById(id);
 
-    if (!select) {
-        return;
-    }
+function fillSelect(
+    id,
+    placeholder,
+    values
+) {
 
-    const current = select.value;
+    const select =
+        document.getElementById(id);
 
-    const firstOption =
-        select.querySelector("option:first-child");
+    const current =
+        select.value;
 
-    select.innerHTML = "";
+    select.innerHTML =
+        `<option value="">${placeholder}</option>` +
+        values
+            .filter(Boolean)
+            .sort()
+            .map(
+                value =>
+                    `
+                    <option value="${esc(value)}">
+                        ${esc(value)}
+                    </option>
+                    `
+            )
+            .join("");
 
-    if (firstOption) {
-        select.appendChild(firstOption);
-    } else {
-        const option = document.createElement("option");
-
-        option.value = "";
-        option.textContent = "Tous";
-
-        select.appendChild(option);
-    }
-
-    values.forEach(value => {
-        const option = document.createElement("option");
-
-        option.value = value;
-        option.textContent = value;
-
-        select.appendChild(option);
-    });
-
-    if (
-        [...select.options]
-            .some(option => option.value === current)
-    ) {
-        select.value = current;
-    }
+    select.value =
+        current;
 }
 
-function applyFilters() {
-    const search =
-        document.getElementById("search")?.value
-            ?.toLowerCase()
-            .trim() || "";
 
-    const severity =
-        document.getElementById("filter-severity")?.value
-            ?.toUpperCase() || "";
+function applyFilters(
+    sourceList = null
+) {
 
-    const tool =
-        document.getElementById("filter-tool")?.value
-            ?.toLowerCase() || "";
+    const list =
+        sourceList ||
+        allVulnerabilities.filter(
+            vulnerability =>
+                Number(vulnerability.scan_id) ===
+                Number(selectedScanId)
+        );
 
-    const filtered = allVulnerabilities.filter(v => {
-        const searchable = [
-            v.id,
-            v.tool,
-            v.vuln_type,
-            v.file,
-            v.message,
-            v.cwe,
-            v.owasp,
-            v.ml_priority
-        ]
-            .join(" ")
+    const text =
+        document
+            .getElementById("search")
+            .value
+            .trim()
             .toLowerCase();
 
-        const matchesSearch =
-            !search ||
-            searchable.includes(search);
+    const severity =
+        document
+            .getElementById(
+                "filter-severity"
+            )
+            .value;
 
-        const matchesSeverity =
-            !severity ||
-            sevKey(v.severity) === severity;
+    const tool =
+        document
+            .getElementById(
+                "filter-tool"
+            )
+            .value;
 
-        const matchesTool =
-            !tool ||
-            String(v.tool || "").toLowerCase() === tool;
+    const filtered =
+        list.filter(vulnerability => {
 
-        return (
-            matchesSearch &&
-            matchesSeverity &&
-            matchesTool
-        );
-    });
+            if (
+                severity &&
+                vulnerability.severity !==
+                severity
+            ) {
+                return false;
+            }
 
-    displayVulnerabilities(filtered);
+            if (
+                tool &&
+                vulnerability.tool !==
+                tool
+            ) {
+                return false;
+            }
 
-    setText(
-        "result-count",
-        `${filtered.length} résultat${filtered.length > 1 ? "s" : ""}`
+            if (!text) {
+                return true;
+            }
+
+            return [
+                vulnerability.tool,
+                vulnerability.vuln_type,
+                vulnerability.file,
+                vulnerability.id
+            ].some(
+                value =>
+                    String(
+                        value ?? ""
+                    )
+                        .toLowerCase()
+                        .includes(text)
+            );
+        });
+
+    displayVulnerabilities(
+        filtered
     );
+
+    document.getElementById(
+        "result-count"
+    ).textContent =
+        `${filtered.length} résultat${filtered.length > 1 ? "s" : ""} sur ${list.length}`;
 }
 
+
 /* =========================================================
-   VULNERABILITY TABLE
-   ========================================================= */
+   TABLEAU VULNÉRABILITÉS
+========================================================= */
 
 function displayVulnerabilities(list) {
-    const body =
-        document.getElementById("vulnerabilities-body");
+
+    const tableBody =
+        document.getElementById(
+            "vulnerabilities-body"
+        );
+
+    tableBody.innerHTML = "";
 
     const empty =
-        document.getElementById("empty");
+        document.getElementById(
+            "empty"
+        );
 
-    if (!body) {
-        return;
-    }
-
-    body.innerHTML = "";
-
-    if (!list.length) {
-        if (empty) {
-            empty.classList.remove("hidden");
-        }
-
-        return;
-    }
-
-    if (empty) {
-        empty.classList.add("hidden");
-    }
+    empty.hidden =
+        list.length > 0;
 
     list.forEach(vulnerability => {
-        const row = document.createElement("tr");
 
-        const probability =
-            vulnerability.ml_probability;
+        const row =
+            document.createElement("tr");
 
-        row.innerHTML = `
-            <td>
-                <strong>#${esc(vulnerability.id)}</strong>
+        const severity =
+            sevKey(
+                vulnerability.severity
+            );
+
+        row.innerHTML =
+            `
+            <td class="id">
+                ${esc(vulnerability.id)}
             </td>
 
             <td>
-                <div class="vuln-type">
-                    ${esc(vulnerability.vuln_type || "Vulnérabilité")}
-                </div>
-
-                ${
-                    vulnerability.cwe
-                        ? `<div class="line-number">${esc(vulnerability.cwe)}</div>`
-                        : ""
-                }
+                ${esc(vulnerability.tool)}
             </td>
 
             <td>
-                <span class="badge badge-info">
-                    ${esc(vulnerability.tool || "—")}
+                ${esc(vulnerability.vuln_type)}
+            </td>
+
+            <td>
+                <span class="severity sev-${severity}">
+                    ${esc(vulnerability.severity)}
                 </span>
             </td>
 
-            <td>
-                ${severityBadge(vulnerability.severity)}
+            <td
+                class="file"
+                title="${esc(vulnerability.file)}"
+            >
+                ${esc(vulnerability.file)}
             </td>
 
-            <td>
-                ${priorityBadge(vulnerability.ml_priority)}
-            </td>
-
-            <td>
-                ${probabilityHTML(probability)}
-            </td>
-
-            <td>
-                <div class="file-name">
-                    ${esc(vulnerability.file || "—")}
-                </div>
-
-                <div class="line-number">
-                    Ligne ${esc(vulnerability.line || "—")}
-                </div>
+            <td class="num">
+                ${esc(vulnerability.line)}
             </td>
 
             <td>
                 <button
-                    class="action-button"
-                    onclick="openDetails(${Number(vulnerability.id)})"
+                    class="btn-detail"
+                    data-id="${esc(vulnerability.id)}"
                 >
-                    Détails
+                    Voir détails
                 </button>
             </td>
-        `;
+            `;
 
-        body.appendChild(row);
+        tableBody.appendChild(
+            row
+        );
     });
 }
 
-/* =========================================================
-   DETAILS DRAWER
-   ========================================================= */
 
-function openDetails(id) {
-    const vulnerability =
+/* =========================================================
+   PANNEAU DE DÉTAILS
+========================================================= */
+
+const drawer =
+    document.getElementById(
+        "drawer"
+    );
+
+const overlay =
+    document.getElementById(
+        "overlay"
+    );
+
+let lastFocus = null;
+
+
+/*
+ * Transforme l'extrait de code retourné par FastAPI
+ * en HTML affichable dans le drawer.
+ */
+function renderCodeExcerpt(codeExcerpt) {
+
+    if (
+        !codeExcerpt ||
+        !Array.isArray(codeExcerpt.lines) ||
+        codeExcerpt.lines.length === 0
+    ) {
+        return `
+            <div class="code-empty">
+                Aucun extrait de code disponible.
+            </div>
+        `;
+    }
+
+    const lines =
+        codeExcerpt.lines
+            .map(item => {
+
+                const lineClass =
+                    item.vulnerable
+                        ? "code-line vulnerable"
+                        : "code-line";
+
+                const marker =
+                    item.vulnerable
+                        ? "⚠"
+                        : "";
+
+                return `
+                    <div class="${lineClass}">
+                        <span class="line-marker">
+                            ${marker}
+                        </span>
+
+                        <span class="line-number">
+                            ${esc(item.line)}
+                        </span>
+
+                        <code>
+                            ${esc(item.code)}
+                        </code>
+                    </div>
+                `;
+            })
+            .join("");
+
+    return `
+        <section class="code-section">
+
+            <div class="code-header">
+                <strong>Extrait du code</strong>
+
+                <span>
+                    Lignes
+                    ${esc(codeExcerpt.start_line)}
+                    -
+                    ${esc(codeExcerpt.end_line)}
+                </span>
+            </div>
+
+            <div class="code-block">
+                ${lines}
+            </div>
+
+        </section>
+    `;
+}
+
+
+async function openDetails(id) {
+
+    /*
+     * On récupère d'abord les informations déjà présentes
+     * dans le dashboard.
+     */
+    let vulnerability =
         allVulnerabilities.find(
-            v => Number(v.id) === Number(id)
+            item =>
+                String(item.id) ===
+                String(id)
         );
 
     if (!vulnerability) {
         return;
     }
 
-    const overlay =
-        document.getElementById("overlay");
-
-    const drawer =
-        document.getElementById("drawer");
-
-    const severity =
-        document.getElementById("drawer-severity");
-
-    const title =
-        document.getElementById("drawer-title");
-
-    const location =
-        document.getElementById("drawer-location");
-
-    const body =
-        document.getElementById("drawer-body");
-
-    if (!drawer || !body) {
-        return;
-    }
-
-    if (severity) {
-        severity.innerHTML =
-            severityBadge(vulnerability.severity);
-    }
-
-    if (title) {
-        title.textContent =
-            vulnerability.vuln_type ||
-            "Vulnérabilité";
-    }
-
-    if (location) {
-        location.textContent =
-            `${vulnerability.file || "—"} : ligne ${vulnerability.line || "—"}`;
-    }
-
-    const probability =
-        vulnerability.ml_probability !== null &&
-        vulnerability.ml_probability !== undefined
-            ? `${(Number(vulnerability.ml_probability) * 100).toFixed(2)}%`
-            : "—";
-
-    body.innerHTML = `
-        <div class="detail-section">
-
-            <h3>Analyse de sécurité</h3>
-
-            <div class="detail-grid">
-
-                <div class="detail-item">
-                    <span>Scanner</span>
-                    <strong>${esc(vulnerability.tool || "—")}</strong>
-                </div>
-
-                <div class="detail-item">
-                    <span>Règle</span>
-                    <strong>${esc(vulnerability.rule_id || "—")}</strong>
-                </div>
-
-                <div class="detail-item">
-                    <span>Sévérité scanner</span>
-                    <strong>${esc(vulnerability.severity || "—")}</strong>
-                </div>
-
-                <div class="detail-item">
-                    <span>CWE</span>
-                    <strong>${esc(vulnerability.cwe || "—")}</strong>
-                </div>
-
-                <div class="detail-item">
-                    <span>OWASP</span>
-                    <strong>${esc(vulnerability.owasp || "—")}</strong>
-                </div>
-
-                <div class="detail-item">
-                    <span>Langage</span>
-                    <strong>${esc(vulnerability.language || "—")}</strong>
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="detail-section">
-
-            <h3>Analyse XGBoost</h3>
-
-            <div class="ai-detail">
-
-                <div class="ai-detail-title">
-                    🤖 Priorisation par intelligence artificielle
-                </div>
-
-                <div class="ai-detail-grid">
-
-                    <div class="ai-detail-item">
-                        <span>Prédiction</span>
-                        <strong>
-                            ${esc(vulnerability.ml_prediction ?? "—")}
-                        </strong>
-                    </div>
-
-                    <div class="ai-detail-item">
-                        <span>Probabilité prédite</span>
-                        <strong>${probability}</strong>
-                    </div>
-
-                    <div class="ai-detail-item">
-                        <span>Priorité XGBoost</span>
-                        <strong>
-                            ${esc(vulnerability.ml_priority || "—")}
-                        </strong>
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="detail-section">
-
-            <h3>Description</h3>
-
-            <div class="detail-item">
-                ${esc(
-                    vulnerability.message ||
-                    vulnerability.description ||
-                    "Aucune description disponible."
-                )}
-            </div>
-
-        </div>
-
-        <div class="detail-section">
-
-            <h3>Impact</h3>
-
-            <div class="detail-item">
-                ${esc(
-                    vulnerability.impact ||
-                    "Impact non renseigné."
-                )}
-            </div>
-
-        </div>
-
-        <div class="detail-section">
-
-            <h3>Likelihood</h3>
-
-            <div class="detail-item">
-                ${esc(
-                    vulnerability.likelihood ||
-                    "Non renseigné."
-                )}
-            </div>
-
-        </div>
-
-        <div class="detail-section">
-
-            <h3>Code / emplacement</h3>
-
-            <pre class="code-block">${esc(
-                vulnerability.code_excerpt ||
-                vulnerability.code ||
-                vulnerability.message ||
-                "Extrait de code non disponible."
-            )}</pre>
-
-        </div>
-    `;
-
-    if (overlay) {
-        overlay.classList.add("open");
-    }
-
-    drawer.classList.add("open");
-}
-
-function closeDetails() {
-    const overlay =
-        document.getElementById("overlay");
-
-    const drawer =
-        document.getElementById("drawer");
-
-    if (overlay) {
-        overlay.classList.remove("open");
-    }
-
-    if (drawer) {
-        drawer.classList.remove("open");
-    }
-}
-
-/* =========================================================
-   SCAN HISTORY
-   ========================================================= */
-
-function displayScanHistory(scans) {
-    const body =
-        document.getElementById("scans-body");
-
-    const empty =
-        document.getElementById("history-empty");
-
-    if (!body) {
-        return;
-    }
-
-    body.innerHTML = "";
-
-    if (!scans.length) {
-        if (empty) {
-            empty.classList.remove("hidden");
-        }
-
-        return;
-    }
-
-    if (empty) {
-        empty.classList.add("hidden");
-    }
-
-    scans.forEach(scan => {
-        const row = document.createElement("tr");
-
-        if (Number(scan.id) === Number(selectedScanId)) {
-            row.classList.add("selected");
-        }
-
-        row.classList.add("scan-row");
-
-        row.onclick = () => selectScan(scan.id);
-
-        row.innerHTML = `
-            <td>
-                <strong>#${esc(scan.id)}</strong>
-            </td>
-
-            <td>
-                ${esc(scan.project || "DevSecOps")}
-            </td>
-
-            <td>
-                ${formatDate(scan.started_at)}
-            </td>
-
-            <td>
-                ${formatDate(scan.finished_at)}
-            </td>
-
-            <td>
-                ${calculateDuration(
-                    scan.started_at,
-                    scan.finished_at
-                )}
-            </td>
-
-            <td>
-                ${esc(
-                    scan.total_alerts ??
-                    scan.total_vulnerabilities ??
-                    "—"
-                )}
-            </td>
-
-            <td>
-                ${
-                    String(scan.status || "").toLowerCase() === "success"
-                        ? `<span class="badge badge-success">SUCCÈS</span>`
-                        : `<span class="badge badge-warning">${esc(scan.status || "—")}</span>`
-                }
-            </td>
-        `;
-
-        body.appendChild(row);
-    });
-}
-
-function selectScan(scanId) {
-    selectedScanId = scanId;
-
-    const scan =
-        allScans.find(
-            s => Number(s.id) === Number(scanId)
-        );
-
-    if (scan) {
-        updateCurrentScan(scan);
-    }
-
-    displayScanHistory(allScans);
 
     /*
-     * The backend currently returns all vulnerabilities.
-     * Filter locally by scan_id.
+     * IMPORTANT :
+     * On appelle maintenant FastAPI pour récupérer
+     * le détail complet + code_excerpt.
      */
-    const scanVulnerabilities =
-        allVulnerabilities.filter(
-            v => Number(v.scan_id) === Number(scanId)
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/vulnerabilities/${id}`
+            );
+
+        if (response.ok) {
+
+            const detailedVulnerability =
+                await response.json();
+
+            vulnerability = {
+                ...vulnerability,
+                ...detailedVulnerability
+            };
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Impossible de récupérer le détail :",
+            error
+        );
+    }
+
+
+    const severity =
+        sevKey(
+            vulnerability.severity
         );
 
-    if (scanVulnerabilities.length > 0) {
-        displayStatistics(scanVulnerabilities);
-        displayRiskAnalysis(scanVulnerabilities);
-        displayAIAnalysis(scanVulnerabilities);
-        displayPipeline(scanVulnerabilities);
-        displayVulnerabilities(scanVulnerabilities);
 
-        setText(
-            "result-count",
-            `${scanVulnerabilities.length} résultat${scanVulnerabilities.length > 1 ? "s" : ""}`
-        );
-    } else {
-        displayVulnerabilities([]);
-        setText("result-count", "0 résultat");
+    document.getElementById(
+        "drawer-severity"
+    ).innerHTML =
+        `
+        <span class="severity sev-${severity}">
+            ${esc(vulnerability.severity)}
+        </span>
+        `;
+
+
+    document.getElementById(
+        "drawer-title"
+    ).textContent =
+        vulnerability.vuln_type ||
+        "Vulnérabilité";
+
+
+    document.getElementById(
+        "drawer-location"
+    ).textContent =
+        `${vulnerability.file ?? "-"}${
+            vulnerability.line != null
+                ? ":" + vulnerability.line
+                : ""
+        }`;
+
+
+    /*
+     * Informations principales + code.
+     */
+    document.getElementById(
+        "drawer-body"
+    ).innerHTML =
+        `
+        <div class="grid-3">
+
+            <div class="field">
+                <dt>Outil</dt>
+                <dd>
+                    ${esc(vulnerability.tool)}
+                </dd>
+            </div>
+
+            <div class="field">
+                <dt>ID</dt>
+                <dd>
+                    #${esc(vulnerability.id)}
+                </dd>
+            </div>
+
+            <div class="field">
+                <dt>Scan</dt>
+                <dd>
+                    #${esc(vulnerability.scan_id)}
+                </dd>
+            </div>
+
+        </div>
+
+
+        <dl class="field">
+            <dt>CWE</dt>
+            <dd>
+                ${tag(vulnerability.cwe)}
+            </dd>
+        </dl>
+
+
+        <dl class="field">
+            <dt>OWASP</dt>
+            <dd>
+                ${tag(vulnerability.owasp)}
+            </dd>
+        </dl>
+
+
+        <dl class="field">
+            <dt>Message</dt>
+
+            <dd class="message">
+                ${esc(vulnerability.message)}
+            </dd>
+        </dl>
+
+
+        <div class="grid-3">
+
+            <div class="field">
+                <dt>Impact</dt>
+                <dd>
+                    ${esc(vulnerability.impact)}
+                </dd>
+            </div>
+
+            <div class="field">
+                <dt>Likelihood</dt>
+                <dd>
+                    ${esc(vulnerability.likelihood)}
+                </dd>
+            </div>
+
+            <div class="field">
+                <dt>Confidence</dt>
+                <dd>
+                    ${esc(vulnerability.confidence)}
+                </dd>
+            </div>
+
+        </div>
+
+
+        ${renderCodeExcerpt(vulnerability.code_excerpt)}
+        `;
+
+
+    lastFocus =
+        document.activeElement;
+
+
+    drawer.classList.add(
+        "open"
+    );
+
+
+    drawer.setAttribute(
+        "aria-hidden",
+        "false"
+    );
+
+
+    overlay.hidden =
+        false;
+
+
+    document
+        .getElementById(
+            "drawer-close"
+        )
+        .focus();
+}
+
+
+function tag(value) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        value === ""
+    ) {
+        return "-";
+    }
+
+    const items =
+        Array.isArray(value)
+            ? value
+            : [value];
+
+    return items
+        .map(
+            item =>
+                `<span class="tag">${esc(item)}</span>`
+        )
+        .join(" ");
+}
+
+
+function closeDetails() {
+
+    drawer.classList.remove(
+        "open"
+    );
+
+    drawer.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+
+    overlay.hidden =
+        true;
+
+    if (lastFocus) {
+        lastFocus.focus();
     }
 }
 
-function updateCurrentScan(scan) {
-    setText(
-        "current-project",
-        scan.project || "DevSecOps AI"
-    );
-
-    setText(
-        "current-scan-id",
-        `#${scan.id ?? "—"}`
-    );
-
-    setText(
-        "current-scan-status",
-        scan.status || "—"
-    );
-
-    setText(
-        "current-scan-date",
-        formatDate(
-            scan.started_at ||
-            scan.finished_at
-        )
-    );
-}
 
 /* =========================================================
-   SCAN LAUNCH
-   ========================================================= */
+   LANCER UN SCAN
+========================================================= */
 
 async function launchScan() {
-    const button =
-        document.getElementById("scan-button");
 
-    if (button) {
-        button.disabled = true;
-        button.textContent = "Scan en cours...";
-    }
+    const button =
+        document.getElementById(
+            "scan-button"
+        );
+
+    const oldText =
+        button.textContent;
+
+    button.disabled =
+        true;
+
+    button.textContent =
+        "Scan en cours…";
 
     try {
-        const response =
-            await fetch(`${API_URL}/scan`, {
-                method: "POST"
-            });
 
-        if (!response.ok) {
-            throw new Error(
-                `Erreur scan : ${response.status}`
+        const response =
+            await fetch(
+                `${API_URL}/scan`,
+                {
+                    method: "POST"
+                }
             );
-        }
 
         const result =
             await response.json();
 
+        if (!response.ok) {
+
+            throw new Error(
+                result.message ||
+                "Le scan a échoué."
+            );
+        }
+
+        if (
+            result.status !==
+            "success"
+        ) {
+
+            throw new Error(
+                "Le scan n'a pas réussi."
+            );
+        }
+
         showMessage(
-            `Scan terminé : ${result.total_alerts ?? 0} alerte(s).`,
+            `Scan #${result.scan_id} terminé : ${result.total_alerts} alertes détectées.`,
             "success"
         );
-
-        selectedScanId =
-            result.scan_id ?? null;
 
         await loadDashboard();
 
     } catch (error) {
+
         console.error(error);
 
         showMessage(
-            "Le scan n'a pas pu être exécuté.",
+            "Impossible de lancer le scan : " +
+            error.message,
             "error"
         );
 
     } finally {
-        if (button) {
-            button.disabled = false;
-            button.textContent = "Lancer un scan";
+
+        button.disabled =
+            false;
+
+        button.textContent =
+            oldText;
+    }
+}
+
+
+/* =========================================================
+   ÉVÉNEMENTS
+========================================================= */
+
+document
+    .getElementById("scans-body")
+    .addEventListener(
+        "click",
+        event => {
+
+            const button =
+                event.target.closest(
+                    ".btn-history"
+                );
+
+            if (!button) {
+                return;
+            }
+
+            selectScan(
+                Number(
+                    button.dataset.scanId
+                )
+            );
+        }
+    );
+
+
+document
+    .getElementById(
+        "vulnerabilities-body"
+    )
+    .addEventListener(
+        "click",
+        event => {
+
+            const button =
+                event.target.closest(
+                    ".btn-detail"
+                );
+
+            if (!button) {
+                return;
+            }
+
+            openDetails(
+                button.dataset.id
+            );
+        }
+    );
+
+
+document
+    .getElementById(
+        "drawer-close"
+    )
+    .addEventListener(
+        "click",
+        closeDetails
+    );
+
+
+overlay.addEventListener(
+    "click",
+    closeDetails
+);
+
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key ===
+            "Escape"
+        ) {
+            closeDetails();
         }
     }
-}
+);
+
+
+document
+    .getElementById(
+        "search"
+    )
+    .addEventListener(
+        "input",
+        () => applyFilters()
+    );
+
+
+document
+    .getElementById(
+        "filter-severity"
+    )
+    .addEventListener(
+        "change",
+        () => applyFilters()
+    );
+
+
+document
+    .getElementById(
+        "filter-tool"
+    )
+    .addEventListener(
+        "change",
+        () => applyFilters()
+    );
+
+
+document
+    .getElementById(
+        "refresh-button"
+    )
+    .addEventListener(
+        "click",
+        async () => {
+
+            await loadDashboard();
+
+            showMessage(
+                "Dashboard actualisé.",
+                "success"
+            );
+        }
+    );
+
+
+document
+    .getElementById(
+        "scan-button"
+    )
+    .addEventListener(
+        "click",
+        launchScan
+    );
+
 
 /* =========================================================
-   DOM HELPERS
-   ========================================================= */
+   DÉMARRAGE
+========================================================= */
 
-function setText(id, value) {
-    const element =
-        document.getElementById(id);
-
-    if (element) {
-        element.textContent = value;
-    }
-}
-
-function setWidth(id, percentage) {
-    const element =
-        document.getElementById(id);
-
-    if (!element) {
-        return;
-    }
-
-    const safe =
-        Math.max(
-            0,
-            Math.min(100, Number(percentage) || 0)
-        );
-
-    element.style.width = `${safe}%`;
-}
-
-/* =========================================================
-   EVENTS
-   ========================================================= */
-
-document.addEventListener("DOMContentLoaded", () => {
-
-    const search =
-        document.getElementById("search");
-
-    const severity =
-        document.getElementById("filter-severity");
-
-    const tool =
-        document.getElementById("filter-tool");
-
-    const refresh =
-        document.getElementById("refresh-button");
-
-    const scanButton =
-        document.getElementById("scan-button");
-
-    const closeButton =
-        document.getElementById("drawer-close");
-
-    const overlay =
-        document.getElementById("overlay");
-
-    if (search) {
-        search.addEventListener(
-            "input",
-            applyFilters
-        );
-    }
-
-    if (severity) {
-        severity.addEventListener(
-            "change",
-            applyFilters
-        );
-    }
-
-    if (tool) {
-        tool.addEventListener(
-            "change",
-            applyFilters
-        );
-    }
-
-    if (refresh) {
-        refresh.addEventListener(
-            "click",
-            loadDashboard
-        );
-    }
-
-    if (scanButton) {
-        scanButton.addEventListener(
-            "click",
-            launchScan
-        );
-    }
-
-    if (closeButton) {
-        closeButton.addEventListener(
-            "click",
-            closeDetails
-        );
-    }
-
-    if (overlay) {
-        overlay.addEventListener(
-            "click",
-            closeDetails
-        );
-    }
-
-    updateModelPerformance();
-
-    loadDashboard();
-});
-
-/* =========================================================
-   GLOBAL
-   ========================================================= */
-
-window.openDetails = openDetails;
-window.closeDetails = closeDetails;
+loadDashboard();
 

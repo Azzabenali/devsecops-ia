@@ -64,6 +64,7 @@ jobs:
             .
 
       - name: Vérifier les tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           pytest
-
